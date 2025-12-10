@@ -106,20 +106,68 @@ frontend/
 
 ### Prerequisites
 
-- Node.js 18+ and npm/yarn/pnpm
-- Backend API running on `http://localhost:3000`
+- **Node.js** (v18 or higher)
+- **npm** (comes with Node.js)
+- **Backend API** must be running (see the main [README.md](../README.md) for backend setup instructions)
+
+⚠️ **Important**: The backend must be running and accessible at `http://localhost:3000` before starting the frontend.
 
 ### Installation
 
-```bash
-# Install dependencies
-npm install
+1. **Install dependencies**
 
-# Run development server
+   ```bash
+   npm install
+   ```
+
+### Running the Application
+
+1. **Ensure the Backend is Running**
+
+   Before starting the frontend, make sure the backend server is running:
+
+   - The backend should be accessible at `http://localhost:3000`
+   - The database should be set up and migrated (see [backend README](../backend/README.md))
+   - You can verify by visiting `http://localhost:3000/api` to see the Swagger documentation
+
+2. **Start the Development Server**
+
+   ```bash
+   npm run dev
+   ```
+
+   The application will be available at `http://localhost:3001`.
+
+3. **Access the Application**
+
+   Open your browser and navigate to:
+
+   **http://localhost:3001**
+
+### Quick Start (Complete Setup)
+
+If you're starting from scratch, follow these steps in order:
+
+```bash
+# 1. Start the database (from backend directory)
+cd ../backend
+docker compose up -d
+
+# 2. Set up the database
+npx prisma generate
+npx prisma migrate deploy
+npx prisma db seed  # Optional: adds test data
+
+# 3. Start the backend server
+npm run start:dev
+
+# 4. In a new terminal, start the frontend
+cd ../frontend
+npm install  # Only needed the first time
 npm run dev
 ```
 
-The application will be available at `http://localhost:3001`.
+The frontend will automatically connect to the backend API at `http://localhost:3000`.
 
 ### Available Scripts
 

@@ -138,20 +138,29 @@ Follow these instructions to run the project locally.
 
 ### Prerequisites
 
-- Node.js (v18+)
-- npm
+- **Node.js** (v18 or higher)
+- **npm** (comes with Node.js)
+- **Docker** and **Docker Compose** (for running PostgreSQL database)
+- **Git** (for cloning the repository)
 
 ### Installation
 
-1.  **Backend Setup**
+1.  **Clone the repository** (if you haven't already)
+
+    ```bash
+    git clone <repository-url>
+    cd interview-task
+    ```
+
+2.  **Backend Setup**
 
     ```bash
     cd backend
     npm install
-    # Ensure your .env file is configured (copy .env.example if available)
     ```
 
-2.  **Frontend Setup**
+3.  **Frontend Setup**
+
     ```bash
     cd frontend
     npm install
@@ -159,28 +168,91 @@ Follow these instructions to run the project locally.
 
 ### Running the Application
 
-1.  **Start the database**
+Follow these steps in order:
+
+1.  **Start the Database**
 
     ```bash
     cd backend
     docker compose up -d
     ```
 
-2.  **Start the Backend**
+    This will start a PostgreSQL database in a Docker container. Wait a few seconds for the database to be ready.
+
+2.  **Set up the Database Schema**
+
+    Generate Prisma Client and run database migrations:
+
+    ```bash
+    cd backend
+    npx prisma generate
+    npx prisma migrate dev
+    ```
+
+    **Note**: `prisma migrate dev` will apply existing migrations and create new ones if needed. If you're setting up for the first time, this will apply all migrations from the `prisma/migrations` directory.
+
+3.  **Seed the Database** (Optional but recommended for testing)
+
+    ```bash
+    cd backend
+    npx prisma db seed
+    ```
+
+    This will populate the database with sample users, funds, and documents. See the [Test Credentials](#test-credentials) section below for login information.
+
+4.  **Configure Environment Variables** (if needed)
+
+    The backend uses environment variables. For local development with Docker, the database connection is configured in `docker-compose.yml`. If you need to override defaults, create a `.env` file in the `backend` directory:
+
+    ```env
+    DATABASE_URL="postgresql://audit_admin:secure_password@localhost:5432/audit_vault?schema=public"
+    PORT=3000
+    JWT_SECRET="your-secret-key-here"
+    ```
+
+5.  **Start the Backend Server**
 
     ```bash
     cd backend
     npm run start:dev
     ```
 
-    The backend server will typically run on `http://localhost:3000` (or as configured).
+    The backend server will run on `http://localhost:3000`. You can access the API documentation at `http://localhost:3000/api` (Swagger UI).
 
-3.  **Start the Frontend**
+6.  **Start the Frontend Application**
+
+    Open a new terminal window:
+
     ```bash
     cd frontend
     npm run dev
     ```
+
     The frontend application will be available at `http://localhost:3001`.
+
+### Accessing the Application
+
+- **Frontend**: Open your browser and navigate to `http://localhost:3001`
+- **Backend API**: Available at `http://localhost:3000`
+- **API Documentation**: Available at `http://localhost:3000/api` (Swagger UI)
+
+### Stopping the Application
+
+1. Stop the frontend: Press `Ctrl+C` in the frontend terminal
+2. Stop the backend: Press `Ctrl+C` in the backend terminal
+3. Stop the database:
+
+   ```bash
+   cd backend
+   docker compose down
+   ```
+
+   To remove the database volumes (clears all data):
+
+   ```bash
+   cd backend
+   docker compose down -v
+   ```
 
 ## Test Credentials
 

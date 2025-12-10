@@ -21,78 +21,217 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# Audit Vault Backend
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+NestJS backend API for the Audit Vault compliance document management system.
 
-## Project setup
+## Tech Stack
 
-```bash
-$ npm install
-```
+- **Framework**: NestJS
+- **Language**: TypeScript
+- **Database**: PostgreSQL (via Prisma ORM)
+- **Authentication**: JWT (Passport)
+- **Documentation**: Swagger/OpenAPI
+- **Validation**: class-validator, class-transformer
 
-## Compile and run the project
+## Prerequisites
 
-```bash
-# development
-$ npm run start
+- Node.js (v18 or higher)
+- npm
+- Docker and Docker Compose (for local database)
 
-# watch mode
-$ npm run start:dev
+## Project Setup
 
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+### 1. Install Dependencies
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
+### 2. Database Setup
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Start the PostgreSQL database using Docker Compose:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+This will start a PostgreSQL 15 container with the following default configuration:
 
-## Resources
+- **Host**: `localhost`
+- **Port**: `5432`
+- **Database**: `audit_vault`
+- **User**: `audit_admin`
+- **Password**: `secure_password`
 
-Check out a few resources that may come in handy when working with NestJS:
+### 3. Environment Variables
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Create a `.env` file in the `backend` directory (optional for local development, as defaults are provided in `docker-compose.yml`):
 
-## Support
+```env
+DATABASE_URL="postgresql://audit_admin:secure_password@localhost:5432/audit_vault?schema=public"
+PORT=3000
+JWT_SECRET="your-jwt-secret-key-change-in-production"
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 4. Database Migrations
 
-## Stay in touch
+Generate Prisma Client and run migrations:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Generate Prisma Client
+npx prisma generate
 
-## License
+# Run migrations (for development)
+npx prisma migrate dev
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Or if migrations are already applied and you just need to sync:
+npx prisma migrate deploy
+```
+
+**Note**: `prisma migrate dev` will create a new migration if the database is not in sync. `prisma migrate deploy` applies existing migrations without creating new ones (useful for production or when migrations already exist).
+
+### 5. Seed the Database (Optional)
+
+Populate the database with sample data including test users, funds, and documents:
+
+```bash
+npx prisma db seed
+```
+
+The seed script creates test accounts with the following credentials:
+
+- **Admin**: `admin@auditvault.com` / `password123`
+- **Fund Manager**: `manager@funds.com` / `password123`
+- **Auditor**: `auditor@auditvault.com` / `password123`
+- **Compliance Officer**: `compliance@auditvault.com` / `password123`
+
+## Running the Application
+
+### Development Mode
+
+```bash
+npm run start:dev
+```
+
+The server will start on `http://localhost:3000` (or the port specified in `PORT` environment variable).
+
+### Production Mode
+
+```bash
+npm run build
+npm run start:prod
+```
+
+### Watch Mode (Development)
+
+```bash
+npm run start:dev
+```
+
+## API Documentation
+
+Once the server is running, access the Swagger API documentation at:
+
+**http://localhost:3000/api**
+
+The Swagger UI provides an interactive interface to explore and test all API endpoints.
+
+## Available Scripts
+
+- `npm run start` - Start the application
+- `npm run start:dev` - Start in watch mode (development)
+- `npm run start:debug` - Start in debug mode
+- `npm run start:prod` - Start in production mode
+- `npm run build` - Build the application
+- `npm run format` - Format code with Prettier
+- `npm run lint` - Run ESLint
+- `npm test` - Run unit tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:cov` - Run tests with coverage
+- `npm run test:e2e` - Run end-to-end tests
+
+## Database Management
+
+### Prisma Studio (Database GUI)
+
+Launch Prisma Studio to visually browse and edit your database:
+
+```bash
+npx prisma studio
+```
+
+This will open a web interface at `http://localhost:5555`.
+
+### Reset Database
+
+To reset the database (⚠️ **Warning**: This will delete all data):
+
+```bash
+npx prisma migrate reset
+```
+
+### Create New Migration
+
+After modifying the Prisma schema:
+
+```bash
+npx prisma migrate dev --name your_migration_name
+```
+
+### Generate Prisma Client
+
+After schema changes:
+
+```bash
+npx prisma generate
+```
+
+## Project Structure
+
+```
+backend/
+├── prisma/
+│   ├── schema.prisma       # Database schema
+│   ├── seed.ts             # Database seeding script
+│   └── migrations/         # Database migrations
+├── src/
+│   ├── auth/               # Authentication module
+│   ├── documents/          # Document management
+│   ├── funds/              # Fund management
+│   ├── users/              # User management
+│   ├── audit/              # Audit trail
+│   ├── chat/               # Chat functionality
+│   ├── storage/            # File storage service
+│   └── main.ts             # Application entry point
+├── docker-compose.yml      # Docker configuration for database
+└── package.json
+```
+
+## API Endpoints
+
+The main API endpoints include:
+
+- **Authentication**: `/auth/login`, `/auth/register`
+- **Documents**: `/documents` (CRUD operations)
+- **Funds**: `/funds` (CRUD operations)
+- **Users**: `/users` (User management)
+- **Audit**: `/audit` (Audit trail queries)
+- **Chat**: `/chat` (Chat sessions and messages)
+
+See the Swagger documentation at `/api` for complete endpoint details.
+
+## Stopping the Application
+
+1. Stop the server: Press `Ctrl+C` in the terminal
+2. Stop the database:
+
+   ```bash
+   docker compose down
+   ```
+
+   To also remove the database volumes:
+
+   ```bash
+   docker compose down -v
+   ```
