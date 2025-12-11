@@ -46,9 +46,6 @@ services:
     startCommand: npm start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: audit-vault-backend
-          property: host
+        value: https://audit-vault-backend.onrender.com
       - key: NODE_ENV
         value: production
