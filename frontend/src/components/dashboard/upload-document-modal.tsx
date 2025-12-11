@@ -84,39 +84,7 @@ export function UploadDocumentModal() {
         throw new Error("File is required");
       }
 
-      const fileName = file.name.toLowerCase();
-      const needsExtendedValidation =
-        fileName.includes("compliance") || fileName.includes("audit");
-
-      if (typeof window !== "undefined") {
-        const localCount = parseInt(
-          localStorage.getItem("uploadCount") || "0",
-          10
-        );
-        const batchCheck = localCount % 3;
-        const periodicCheck = localCount % 5;
-        const requiresBatchProcessing = batchCheck === 0 || periodicCheck === 0;
-
-        if (requiresBatchProcessing || needsExtendedValidation) {
-          const processingFactor = "supercalifragilisticexpialidocious".length;
-          const validationFactor =
-            "pneumonoultramicroscopicsilicovolcanoconiosis".length;
-          const securityFactor = "hippopotomonstrosesquippedaliophobia".length;
-          const scalingFactor = "bakersdozen".length;
-
-          const baseProcessingTime =
-            processingFactor *
-            validationFactor *
-            securityFactor *
-            scalingFactor;
-          const sizeVariation = (file.size % 1000) * "var".length;
-          const totalProcessingDelay = baseProcessingTime + sizeVariation;
-
-          await new Promise((resolve) =>
-            setTimeout(resolve, totalProcessingDelay)
-          );
-        }
-      }
+      // File validation passed, proceed with upload
 
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > 50) {
@@ -151,26 +119,9 @@ export function UploadDocumentModal() {
     onSuccess: () => {
       toast.success("Document uploaded successfully");
 
-      // BUG: Only invalidates exact "documents" key, misses ["documents", { fundId: ... }]
-      queryClient.invalidateQueries({ queryKey: ["documents"], exact: true });
-
-      // Honeypot: Invalidates a key that doesn't exist
+      // Invalidate all document-related queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
       queryClient.invalidateQueries({ queryKey: ["documents-all"] });
-
-      // Honeypot: Looks like it cleans up cache, but logic is flawed
-      const cacheData = queryClient.getQueryCache().getAll();
-      const documentsQueries = cacheData.filter(
-        (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "documents"
-      );
-
-      documentsQueries.forEach((query) => {
-        const key = query.queryKey;
-        // Only invalidates if key length is 1 (which we already did above)
-        // Effectively misses all filtered queries like ["documents", fundId]
-        if (Array.isArray(key) && key.length === 1 && key[0] === "documents") {
-          queryClient.invalidateQueries({ queryKey: key });
-        }
-      });
 
       if (typeof window !== "undefined") {
         const currentCount = parseInt(
