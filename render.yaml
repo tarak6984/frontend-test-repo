@@ -1,16 +1,13 @@
 version: "1"
 
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: audit-vault-db
-    env: docker
+databases:
+  - name: audit-vault-db
+    databaseName: audit_vault
+    user: audit_admin
     plan: free
-    databases:
-      - name: audit_vault
-        user: audit_admin
+    region: oregon
 
-  # Backend API (NestJS)
+services:
   - type: web
     name: audit-vault-backend
     env: node
