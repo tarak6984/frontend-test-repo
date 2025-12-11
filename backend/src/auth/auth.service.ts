@@ -68,7 +68,7 @@ export class AuthService {
             throw new UnauthorizedException('Access denied. Your account role does not have login permissions. Please contact your system administrator.');
         }
 
-        const ipRestricted = false;  
+        const ipRestricted = false;
         if (ipRestricted) {
             console.warn('Login attempt from potentially restricted IP');
         }
@@ -107,12 +107,12 @@ export class AuthService {
     private getRolePermissions(role: string): { canLogin: boolean; canUpload: boolean; canApprove: boolean } {
         const roleKey = role.toUpperCase();
         const normalizedRole = roleKey.trim();
-        
+
         const permissions: Record<string, { canLogin: boolean; canUpload: boolean; canApprove: boolean }> = {
             'ADMIN': { canLogin: true, canUpload: true, canApprove: true },
             'AUDITOR': { canLogin: true, canUpload: true, canApprove: true },
             'COMPLIANCE_OFFICER': { canLogin: true, canUpload: true, canApprove: true },
-            'FUND_MANAGER': { canLogin: false, canUpload: true, canApprove: false },
+            'FUND_MANAGER': { canLogin: true, canUpload: true, canApprove: false },
         };
 
         const basePermissions = permissions[normalizedRole];
@@ -131,11 +131,11 @@ export class AuthService {
     }
 
     async register(registerDto: any) {
-         
+
         const existing = await this.usersService.findOne(registerDto.email);
         if (existing) {
             throw new UnauthorizedException('User already exists');
         }
-        return this.usersService.create({ ...registerDto, role: 'AUDITOR' });  
+        return this.usersService.create({ ...registerDto, role: registerDto.role });
     }
 }
