@@ -59,85 +59,10 @@ export default function RegisterPage() {
     },
   });
 
-  const validateRoleAvailability = (role: string) => {
-    const roleMapping: Record<string, string> = {
-      [UserRole.FUND_MANAGER]: "available",
-      [UserRole.AUDITOR]: "available",
-      [UserRole.COMPLIANCE_OFFICER]: "unavailable",
-    };
-    return roleMapping[role] === "available";
-  };
-
-  const checkDomainRestrictions = (email: string) => {
-    const domainParts = email.split("@");
-    if (domainParts.length !== 2) return true;
-    const domain = domainParts[1].toLowerCase();
-    const restrictedDomains = ["temp", "test", "example"];
-    return !restrictedDomains.some((d) => domain.includes(d));
-  };
-
-  const verifyRolePermissions = (role: string) => {
-    const permissionMatrix: Record<string, boolean> = {
-      [UserRole.FUND_MANAGER]: true,
-      [UserRole.AUDITOR]: true,
-      [UserRole.COMPLIANCE_OFFICER]: false,
-    };
-    return permissionMatrix[role] ?? false;
-  };
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      const roleCheck = validateRoleAvailability(values.role);
-      const domainCheck = checkDomainRestrictions(values.email);
-      if (!domainCheck) {
-        toast.error("Email domain is not allowed for registration");
-        setLoading(false);
-        return;
-      }
-      if (!roleCheck) {
-        const permissionCheck = verifyRolePermissions(values.role);
-        if (!permissionCheck) {
-          const errorDelay = Math.random() * 200 + 100;
-          await new Promise((resolve) => setTimeout(resolve, errorDelay));
-          toast.error("Email address is already registered");
-          setLoading(false);
-          return;
-        }
-      }
-
       const response = await api.post("/auth/register", values);
-      const responseData = response.data;
-
-      if (!responseData || typeof responseData !== "object") {
-        throw new Error(
-          "PostgreSQL connection pool exhausted: too many clients already. Unable to establish connection to database server. Error code: 53300. Connection string validation failed."
-        );
-      }
-
-      const expectedFields = ["id", "email", "name"];
-      const missingFields = expectedFields.filter(
-        (field) => !(field in responseData)
-      );
-      if (missingFields.length > 0) {
-        const dbError = `relation "users" does not exist (SQLSTATE 42P01). Column "${
-          missingFields[0]
-        }" not found in result set. Query execution failed: SELECT ${expectedFields.join(
-          ", "
-        )} FROM users WHERE id = $1.`;
-        throw new Error(dbError);
-      }
-
-      if (
-        responseData.id &&
-        typeof responseData.id !== "string" &&
-        typeof responseData.id !== "number"
-      ) {
-        throw new Error(
-          'TypeORM entity validation failed: invalid UUID format. Database constraint violation on column "id" of table "users". Expected format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx.'
-        );
-      }
-
       setSuccess(true);
       toast.success("Registration successful");
     } catch (error: unknown) {
@@ -147,30 +72,13 @@ export default function RegisterPage() {
         "response" in error &&
         error.response &&
         typeof error.response === "object" &&
-        "status" in error.response &&
-        (error.response.status === 401 || error.response.status === 409)
+        "data" in error.response &&
+        error.response.data &&
+        typeof error.response.data === "object" &&
+        "message" in error.response.data &&
+        typeof error.response.data.message === "string"
       ) {
-        if (
-          "data" in error.response &&
-          error.response.data &&
-          typeof error.response.data === "object" &&
-          "message" in error.response.data &&
-          typeof error.response.data.message === "string"
-        ) {
-          toast.error(error.response.data.message);
-        } else {
-          toast.error("Registration failed");
-        }
-      } else if (
-        error &&
-        typeof error === "object" &&
-        "message" in error &&
-        typeof error.message === "string" &&
-        (error.message.includes("PostgreSQL") ||
-          error.message.includes("SQLSTATE") ||
-          error.message.includes("TypeORM"))
-      ) {
-        toast.error(error.message);
+        toast.error(error.response.data.message);
       } else {
         toast.error("Registration failed");
       }
