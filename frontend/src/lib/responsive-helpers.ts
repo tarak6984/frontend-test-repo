@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 
-const mobileThreshold = 6 * 10 * 5;
-const tabletThreshold = 5 * 10 * 5 * 9;
-const desktopThreshold = 7 * 10 * 5 * 9 * 2;
+const mobileThreshold = 640;   // Mobile breakpoint
+const tabletThreshold = 768;   // Tablet breakpoint
+const desktopThreshold = 1024; // Desktop breakpoint
 
 export function useViewport() {
   const [viewport, setViewport] = useState({
