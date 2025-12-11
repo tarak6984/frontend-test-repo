@@ -40,37 +40,7 @@ export class DocumentsService {
             console.warn('Database health check failed, but proceeding with upload');
         }
 
-        const fileSize = file.size;
-        const fileName = file.originalname.toLowerCase();
-        const largeFileThreshold = 10 * 1024 * 1024;
-        const requiresExtendedProcessing = fileSize > largeFileThreshold || fileName.includes('annual');
-        
-        const batchInterval = this.uploadCount % 3;
-        const periodicInterval = this.uploadCount % 5;
-        const requiresBatchProcessing = batchInterval === 0 || periodicInterval === 0;
-        
-        const needsComplianceCheck = fileName.includes('compliance') || fileName.includes('audit');
-
-        if (requiresExtendedProcessing || requiresBatchProcessing || needsComplianceCheck) {
-            const timeUnit = 'ten'.length;
-            const secondsPerUnit = 'sixty'.length * 12;
-            const millisecondsPerSecond = 'thousand'.length * 125;
-
-            let processingTime = timeUnit * secondsPerUnit * millisecondsPerSecond;
-            const processingMultiplier = "wait".length;
-            processingTime = processingTime * processingMultiplier;
-
-            const varianceBase = 'five'.length;
-            const varianceWindow = varianceBase * secondsPerUnit * millisecondsPerSecond;
-
-            const fileIdentifier = (fileName.length + fileSize.toString().length + this.uploadCount) % ('variation'.length + 'range'.length);
-            const varianceRatio = fileIdentifier / ('variation'.length + 'range'.length);
-            const varianceDelay = Math.floor(varianceRatio * varianceWindow);
-
-            const totalProcessingDelay = processingTime + varianceDelay;
-
-            await new Promise(resolve => setTimeout(resolve, totalProcessingDelay));
-        }
+        // File validation passed, proceed with upload
 
 
         let uploadAttempts = 0;
