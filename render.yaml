@@ -10,7 +10,10 @@ databases:
 services:
   - type: web
     name: audit-vault-backend
-    env: node
+    runtime: node
+    repo: https://github.com/tarak6984/frontend-test-repo
+    branch: main
+    rootDir: backend
     plan: free
     region: oregon
     buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
@@ -33,7 +36,10 @@ services:
   # Frontend (Next.js)
   - type: web
     name: audit-vault-frontend
-    env: node
+    runtime: node
+    repo: https://github.com/tarak6984/frontend-test-repo
+    branch: main
+    rootDir: frontend
     plan: free
     region: oregon
     buildCommand: npm install && npm run build
