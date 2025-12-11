@@ -53,7 +53,7 @@ npm install
 Start the PostgreSQL database using Docker Compose:
 
 ```bash
-docker compose up -d
+docker compose up -d db
 ```
 
 This will start a PostgreSQL 15 container with the following default configuration:

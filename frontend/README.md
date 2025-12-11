@@ -151,7 +151,7 @@ If you're starting from scratch, follow these steps in order:
 ```bash
 # 1. Start the database (from backend directory)
 cd ../backend
-docker compose up -d
+docker compose up -d db
 
 # 2. Set up the database
 npx prisma generate

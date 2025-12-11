@@ -15,6 +15,7 @@ import {
 } from "@/lib/responsive-helpers";
 import { cn } from "@/lib/utils";
 import { normalizeApiResponse } from "@/lib/data-helpers";
+import { Fund } from "@/types";
 
 export default function DashboardPage() {
   const viewport = useViewport();
@@ -30,7 +31,7 @@ export default function DashboardPage() {
     queryKey: ["funds-all"],
     queryFn: async () => {
       const { data } = await api.get("/funds");
-      return normalizeApiResponse(data);
+      return normalizeApiResponse(data) as any as Fund[];
     },
   });
 

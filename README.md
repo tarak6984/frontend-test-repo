@@ -174,7 +174,7 @@ Follow these steps in order:
 
     ```bash
     cd backend
-    docker compose up -d
+    docker compose up -d db
     ```
 
     This will start a PostgreSQL database in a Docker container. Wait a few seconds for the database to be ready.
@@ -186,6 +186,7 @@ Follow these steps in order:
     ```bash
     cd backend
     npx prisma generate
+    npx prisma migrate dev
     ```
 
 3.  **Configure Environment Variables** (if needed)
@@ -195,7 +196,6 @@ Follow these steps in order:
     ```env
     DATABASE_URL="postgresql://audit_admin:secure_password@localhost:5432/audit_vault?schema=public"
     PORT=3000
-    JWT_SECRET="your-secret-key-here"
     ```
 
 4.  **Start the Backend Server**
