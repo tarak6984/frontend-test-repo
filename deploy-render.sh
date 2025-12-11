@@ -9,9 +9,25 @@ echo "🚀 Starting Audit Vault deployment to Render..."
 echo ""
 
 # Configuration
-RENDER_API_KEY="rnd_ZVLMMmCYCU8AJcljr9f4hlh3DKK7"
+# Set these environment variables before running:
+# export RENDER_API_KEY="your-render-api-key"
+# export OPENROUTER_API_KEY="your-openrouter-api-key"
+
+RENDER_API_KEY="${RENDER_API_KEY:-}"
 GITHUB_REPO="https://github.com/tarak6984/frontend-test-repo"
-OPENROUTER_API_KEY="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"
+OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"
+
+if [ -z "$RENDER_API_KEY" ]; then
+  echo "❌ Error: RENDER_API_KEY environment variable not set"
+  echo "Please run: export RENDER_API_KEY='your-key'"
+  exit 1
+fi
+
+if [ -z "$OPENROUTER_API_KEY" ]; then
+  echo "❌ Error: OPENROUTER_API_KEY environment variable not set"
+  echo "Please run: export OPENROUTER_API_KEY='your-key'"
+  exit 1
+fi
 
 # Step 1: Create PostgreSQL Database
 echo "📊 Step 1/3: Creating PostgreSQL database..."
