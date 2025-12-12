@@ -323,7 +323,7 @@ export default function FundsPage() {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex gap-1 border border-gray-200 rounded-md p-1 bg-white">
+        <div className="flex gap-1 border border-gray-200 rounded-md p-1 bg-white dark:bg-gray-800 dark:border-gray-700">
           <Button
             variant={viewMode === "cards" ? "secondary" : "ghost"}
             size="sm"
