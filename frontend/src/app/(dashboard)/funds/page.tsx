@@ -300,8 +300,8 @@ export default function FundsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`pl-9 bg-white border-gray-200 ${resolvedTheme === "dark"
-                ? "text-white placeholder:text-white/70"
-                : ""
+              ? "text-white placeholder:text-white/70"
+              : ""
               }`}
             style={
               resolvedTheme === "dark"
@@ -363,24 +363,21 @@ export default function FundsPage() {
                     <div>
                       <CardTitle
                         className={`text-lg ${resolvedTheme === "dark"
-                            ? "text-white"
-                            : "text-gray-900"
+                          ? "text-white"
+                          : "text-gray-900"
                           }`}
                       >
                         {fund.name}
                       </CardTitle>
                       <CardDescription
                         className={`mt-1 ${resolvedTheme === "dark"
-                            ? "text-white"
-                            : "text-gray-600"
+                          ? "text-white"
+                          : "text-gray-600"
                           }`}
                       >
                         <Badge
                           variant="outline"
-                          className={`font-mono text-xs bg-white ${resolvedTheme === "dark"
-                              ? "text-white border-white"
-                              : ""
-                            }`}
+                          className="font-mono text-xs"
                         >
                           {fund.code}
                         </Badge>
@@ -403,8 +400,8 @@ export default function FundsPage() {
                         </span>
                         <span
                           className={`font-medium ${resolvedTheme === "dark"
-                              ? "text-white"
-                              : "text-gray-900"
+                            ? "text-white"
+                            : "text-gray-900"
                             }`}
                         >
                           {fund.region}
@@ -424,8 +421,8 @@ export default function FundsPage() {
                         </span>
                         <span
                           className={`font-medium ${resolvedTheme === "dark"
-                              ? "text-white"
-                              : "text-gray-900"
+                            ? "text-white"
+                            : "text-gray-900"
                             }`}
                         >
                           {fund.currency}
@@ -444,8 +441,8 @@ export default function FundsPage() {
                       </span>
                       <span
                         className={`font-medium ${resolvedTheme === "dark"
-                            ? "text-white"
-                            : "text-gray-900"
+                          ? "text-white"
+                          : "text-gray-900"
                           }`}
                       >
                         {fund._count?.documents || 0}
@@ -526,18 +523,15 @@ export default function FundsPage() {
                     >
                       <Badge
                         variant="outline"
-                        className={`font-mono bg-white ${resolvedTheme === "dark"
-                            ? "text-white border-white"
-                            : ""
-                          }`}
+                        className="font-mono"
                       >
                         {fund.code}
                       </Badge>
                     </TableCell>
                     <TableCell
                       className={`font-medium ${resolvedTheme === "dark"
-                          ? "text-white"
-                          : "text-gray-900"
+                        ? "text-white"
+                        : "text-gray-900"
                         }`}
                     >
                       {fund.name}
@@ -562,8 +556,8 @@ export default function FundsPage() {
                     </TableCell>
                     <TableCell
                       className={`text-right ${resolvedTheme === "dark"
-                          ? "text-white"
-                          : "text-gray-900"
+                        ? "text-white"
+                        : "text-gray-900"
                         }`}
                     >
                       {fund._count?.documents || 0}
