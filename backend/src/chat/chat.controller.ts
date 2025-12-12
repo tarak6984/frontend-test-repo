@@ -1,7 +1,8 @@
 import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
-import { ChatService, ChatCompletionRequest } from './chat.service';
+import { ChatService } from './chat.service';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../prisma/prisma.service';
+import { ChatCompletionDto } from './dto/chat.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('chat')
@@ -12,7 +13,7 @@ export class ChatController {
     ) { }
 
     @Post('completions')
-    async createCompletion(@Body() request: ChatCompletionRequest) {
+    async createCompletion(@Body() request: ChatCompletionDto) {
         return this.chatService.createChatCompletion(request);
     }
 
