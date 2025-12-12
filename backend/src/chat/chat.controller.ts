@@ -16,7 +16,7 @@ export class ChatController {
     async createCompletion(@Body() request: ChatCompletionDto, @Req() req: any) {
         return this.chatService.createChatCompletion({
             ...request,
-            userId: req.user.userId
+            userId: req.user.id
         });
     }
 
@@ -28,7 +28,7 @@ export class ChatController {
 
     @Get('documents')
     async getUserDocuments(@Req() req: any) {
-        const userId = req.user.userId;
+        const userId = req.user.id;
         const userRole = req.user.role;
 
         // Get documents based on user role

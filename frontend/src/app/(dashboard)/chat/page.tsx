@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ChatSidebar } from "@/components/chat/chat-sidebar";
 
 interface Message {
   role: "user" | "assistant";
@@ -44,7 +45,10 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState("openai/gpt-3.5-turbo");
   const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
 
   // Fetch available models
   const { data: modelsData } = useQuery({
@@ -63,6 +67,41 @@ export default function ChatPage() {
       return data;
     },
   });
+
+  // Load session messages when session is selected
+  useEffect(() => {
+    if (activeSessionId) {
+      loadSessionMessages(activeSessionId);
+    }
+  }, [activeSessionId]);
+
+  const loadSessionMessages = async (sessionId: string) => {
+    try {
+      const { data } = await api.get(`/chat/sessions/${sessionId}`);
+      const sessionMessages = data.messages.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+      setMessages(sessionMessages);
+    } catch (error: any) {
+      toast.error("Failed to load chat history");
+      console.error(error);
+    }
+  };
+
+  // Load pre-selected documents from sessionStorage
+  useEffect(() => {
+    const preSelectedDocs = sessionStorage.getItem("chatSelectedDocuments");
+    if (preSelectedDocs) {
+      try {
+        const docs = JSON.parse(preSelectedDocs);
+        setSelectedDocuments(docs);
+        sessionStorage.removeItem("chatSelectedDocuments");
+      } catch (e) {
+        console.error("Failed to parse pre-selected documents", e);
+      }
+    }
+  }, []);
 
   // Chat completion mutation
   const chatMutation = useMutation({
@@ -83,6 +122,7 @@ export default function ChatPage() {
       }));
 
       const { data } = await api.post("/chat/completions", {
+        sessionId: activeSessionId,
         model: selectedModel,
         messages: newMessages.map((m) => ({
           role: m.role,
@@ -103,12 +143,15 @@ export default function ChatPage() {
           { role: "assistant", content: assistantMessage },
         ]);
       }
+
+      // Update session ID if new session was created
+      if (data.sessionId && !activeSessionId) {
+        setActiveSessionId(data.sessionId);
+        queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
+      }
     },
-    onError: (error: any) => {
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to get response. Please check your OpenRouter API key.";
-      toast.error(errorMessage);
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Failed to get response");
     },
   });
 
@@ -122,10 +165,20 @@ export default function ChatPage() {
     chatMutation.mutate(userMessage);
   };
 
+  const handleNewChat = () => {
+    setActiveSessionId(null);
+    setMessages([]);
+    setSelectedDocuments([]);
+  };
+
+  const handleSessionSelect = (sessionId: string) => {
+    setActiveSessionId(sessionId);
+  };
+
   const toggleDocument = (doc: Document) => {
     setSelectedDocuments((prev) => {
-      const isSelected = prev.some((d) => d.id === doc.id);
-      if (isSelected) {
+      const exists = prev.find((d) => d.id === doc.id);
+      if (exists) {
         return prev.filter((d) => d.id !== doc.id);
       } else {
         return [...prev, doc];
@@ -137,36 +190,31 @@ export default function ChatPage() {
     setSelectedDocuments((prev) => prev.filter((d) => d.id !== docId));
   };
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load pre-selected documents from sessionStorage (from documents page)
-  useEffect(() => {
-    const stored = sessionStorage.getItem("chatSelectedDocs");
-    if (stored) {
-      try {
-        const docs = JSON.parse(stored);
-        setSelectedDocuments(docs);
-        sessionStorage.removeItem("chatSelectedDocs"); // Clear after loading
-        toast.success(`${docs.length} document(s) loaded for chat`);
-      } catch (e) {
-        console.error("Failed to load pre-selected documents");
-      }
-    }
-  }, []);
-
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col p-4">
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="border-b">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              AI Assistant
-            </CardTitle>
-            <div className="flex items-center gap-2">
+    <div className="flex h-[calc(100vh-4rem)]">
+      {/* Sidebar */}
+      <ChatSidebar
+        activeSessionId={activeSessionId}
+        onSessionSelect={handleSessionSelect}
+        onNewChat={handleNewChat}
+      />
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        <div className="border-b border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">AI Assistant</h1>
+              <p className="text-sm text-muted-foreground">
+                Select documents above and ask me anything about compliance, audits, or your documents.
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
               {/* Document Selector */}
               <Popover>
                 <PopoverTrigger asChild>
@@ -175,37 +223,38 @@ export default function ChatPage() {
                     Documents ({selectedDocuments.length})
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 max-h-96 overflow-y-auto">
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-sm">Select Documents</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Choose documents to discuss with the AI
-                    </p>
-                    {documentsData?.documents?.length === 0 ? (
-                      <p className="text-sm text-muted-foreground py-4">
-                        No documents available
+                <PopoverContent className="w-96" align="end">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Select Documents</h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Choose documents to provide context for the AI
                       </p>
-                    ) : (
-                      documentsData?.documents?.map((doc: Document) => (
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {documentsData?.documents?.map((doc: Document) => (
                         <div
                           key={doc.id}
-                          className="flex items-start space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
-                          onClick={() => toggleDocument(doc)}
+                          className="flex items-start space-x-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
                         >
                           <Checkbox
+                            id={doc.id}
                             checked={selectedDocuments.some((d) => d.id === doc.id)}
                             onCheckedChange={() => toggleDocument(doc)}
                           />
-                          <div className="flex-1 text-sm">
-                            <p className="font-medium">{doc.title}</p>
-                            <p className="text-xs text-muted-foreground">
+                          <label
+                            htmlFor={doc.id}
+                            className="flex-1 text-sm cursor-pointer"
+                          >
+                            <div className="font-medium">{doc.title}</div>
+                            <div className="text-xs text-muted-foreground">
                               {doc.type} • {doc.status}
                               {doc.fund && ` • ${doc.fund.name}`}
-                            </p>
-                          </div>
+                            </div>
+                          </label>
                         </div>
-                      ))
-                    )}
+                      ))}
+                    </div>
                   </div>
                 </PopoverContent>
               </Popover>
@@ -228,14 +277,18 @@ export default function ChatPage() {
 
           {/* Selected Documents Pills */}
           {selectedDocuments.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-3">
               {selectedDocuments.map((doc) => (
-                <Badge key={doc.id} variant="secondary" className="gap-1">
+                <Badge
+                  key={doc.id}
+                  variant="secondary"
+                  className="flex items-center gap-1"
+                >
                   <FileText className="h-3 w-3" />
                   {doc.title}
                   <button
                     onClick={() => removeDocument(doc.id)}
-                    className="ml-1 hover:bg-destructive/20 rounded-full"
+                    className="ml-1 hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -243,60 +296,78 @@ export default function ChatPage() {
               ))}
             </div>
           )}
-        </CardHeader>
+        </div>
 
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-950">
           {messages.length === 0 ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center space-y-3">
-                <Bot className="h-12 w-12 mx-auto text-muted-foreground" />
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    Welcome to Audit Vault AI Assistant
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Select documents above and ask me anything about compliance,
-                    audits, or your documents.
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4 max-w-2xl">
-                  <Button
-                    variant="outline"
-                    className="text-left justify-start"
-                    onClick={() => {
-                      setInput("Summarize the selected documents");
-                    }}
-                  >
-                    Summarize selected documents
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="text-left justify-start"
-                    onClick={() => {
-                      setInput("What is the compliance status?");
-                    }}
-                  >
-                    Check compliance status
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="text-left justify-start"
-                    onClick={() => {
-                      setInput("Explain the audit process");
-                    }}
-                  >
-                    Explain audit process
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="text-left justify-start"
-                    onClick={() => {
-                      setInput("What documents need review?");
-                    }}
-                  >
-                    Documents needing review
-                  </Button>
-                </div>
+            <div className="flex flex-col items-center justify-center h-full text-center px-4">
+              <Bot className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-base font-medium mb-1">
+                Welcome to Audit Vault AI Assistant
+              </h3>
+              <p className="text-muted-foreground max-w-md mb-4">
+                Select documents above and ask me anything about compliance, audits, or your documents.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-2xl">
+                <Card 
+                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    const prompt = selectedDocuments.length > 0 
+                      ? "Summarize the selected documents and highlight key compliance requirements" 
+                      : "Summarize the compliance requirements for the current period";
+                    setInput(prompt);
+                    setTimeout(() => inputRef.current?.focus(), 100);
+                  }}
+                >
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm">
+                      Summarize selected documents
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card 
+                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    const prompt = selectedDocuments.length > 0
+                      ? "Check the compliance status of the selected documents"
+                      : "What is the overall compliance status of recent documents?";
+                    setInput(prompt);
+                    setTimeout(() => inputRef.current?.focus(), 100);
+                  }}
+                >
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm">
+                      Check compliance status
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card 
+                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    setInput("Explain the audit process for annual reports");
+                    setTimeout(() => inputRef.current?.focus(), 100);
+                  }}
+                >
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm">
+                      Explain audit process
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card 
+                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => {
+                    setInput("Which documents are currently pending review or need attention?");
+                    setTimeout(() => inputRef.current?.focus(), 100);
+                  }}
+                >
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm">
+                      Documents needing review
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
               </div>
             </div>
           ) : (
@@ -304,56 +375,58 @@ export default function ChatPage() {
               {messages.map((message, index) => (
                 <div
                   key={index}
-                  className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"
+                  className={`flex gap-3 ${message.role === "assistant" ? "justify-start" : "justify-end"
                     }`}
                 >
                   {message.role === "assistant" && (
-                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                        <Bot className="h-5 w-5 text-white" />
+                      </div>
                     </div>
                   )}
                   <div
-                    className={`max-w-[70%] rounded-lg p-3 ${message.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 dark:bg-gray-800"
+                    className={`max-w-[70%] rounded-lg p-4 ${message.role === "assistant"
+                        ? "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
+                        : "bg-blue-600 text-white"
                       }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">
-                      {message.content}
-                    </p>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   </div>
                   {message.role === "user" && (
-                    <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                        <User className="h-5 w-5 text-white" />
+                      </div>
                     </div>
                   )}
                 </div>
               ))}
               {chatMutation.isPending && (
                 <div className="flex gap-3 justify-start">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                      <Bot className="h-5 w-5 text-white" />
+                    </div>
                   </div>
-                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                   </div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </>
           )}
-        </CardContent>
+        </div>
 
-        <div className="border-t p-4">
+        {/* Input Area */}
+        <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={
-                selectedDocuments.length > 0
-                  ? "Ask about the selected documents..."
-                  : "Type your message..."
-              }
+              placeholder="Type your message..."
               disabled={chatMutation.isPending}
               className="flex-1"
             />
@@ -369,17 +442,13 @@ export default function ChatPage() {
             </Button>
           </form>
           <p className="text-xs text-muted-foreground mt-2">
-            {selectedDocuments.length > 0 && (
-              <span className="text-blue-600 dark:text-blue-400">
-                {selectedDocuments.length} document(s) selected •{" "}
-              </span>
-            )}
-            {modelsData?.models?.length
-              ? `Using ${selectedModel.split("/")[1] || selectedModel}`
-              : "Configure OPENROUTER_API_KEY to enable chat"}
+            Using {selectedModel.split("/")[1] || selectedModel}
+            {selectedDocuments.length > 0 &&
+              ` with ${selectedDocuments.length} document${selectedDocuments.length > 1 ? "s" : ""
+              }`}
           </p>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
