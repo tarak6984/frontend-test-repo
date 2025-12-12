@@ -142,6 +142,21 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Load pre-selected documents from sessionStorage (from documents page)
+  useEffect(() => {
+    const stored = sessionStorage.getItem("chatSelectedDocs");
+    if (stored) {
+      try {
+        const docs = JSON.parse(stored);
+        setSelectedDocuments(docs);
+        sessionStorage.removeItem("chatSelectedDocs"); // Clear after loading
+        toast.success(`${docs.length} document(s) loaded for chat`);
+      } catch (e) {
+        console.error("Failed to load pre-selected documents");
+      }
+    }
+  }, []);
+
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col p-4">
       <Card className="flex-1 flex flex-col">
@@ -299,8 +314,8 @@ export default function ChatPage() {
                   )}
                   <div
                     className={`max-w-[70%] rounded-lg p-3 ${message.role === "user"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 dark:bg-gray-800"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-800"
                       }`}
                   >
                     <p className="text-sm whitespace-pre-wrap">

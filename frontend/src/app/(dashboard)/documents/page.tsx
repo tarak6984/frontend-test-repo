@@ -294,6 +294,18 @@ export default function DocumentsPage() {
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        sessionStorage.setItem("chatSelectedDocs", JSON.stringify([doc]));
+                        router.push("/chat");
+                        toast.success("Document selected for chat");
+                      }}
+                      title="Chat about this document"
+                    >
+                      <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </Button>
                     {isAdmin && (
                       <Button
                         variant="ghost"
