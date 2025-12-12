@@ -6,11 +6,21 @@ export interface ChatMessage {
     content: string;
 }
 
+export interface DocumentContext {
+    id: string;
+    title: string;
+    type: string;
+    status: string;
+    fundName?: string;
+    fundCode?: string;
+}
+
 export interface ChatCompletionRequest {
     model: string;
     messages: ChatMessage[];
     temperature?: number;
     max_tokens?: number;
+    documentContext?: DocumentContext[]; // Selected documents for context
 }
 
 @Injectable()
@@ -36,11 +46,29 @@ export class ChatService {
         }
 
         try {
+            // Prepare messages with document context if provided
+            let messages = [...request.messages];
+
+            // If document context is provided, inject it as a system message
+            if (request.documentContext && request.documentContext.length > 0) {
+                const documentInfo = request.documentContext.map(doc =>
+                    `- ${doc.title} (${doc.type}, Status: ${doc.status}${doc.fundName ? `, Fund: ${doc.fundName}` : ''})`
+                ).join('\n');
+
+                const systemMessage: ChatMessage = {
+                    role: 'system',
+                    content: `You are an AI assistant for Audit Vault, a compliance document management system. The user is currently discussing the following documents:\n\n${documentInfo}\n\nProvide helpful information about these documents, compliance requirements, and audit processes. Be specific when referencing these documents.`
+                };
+
+                // Insert system message at the beginning
+                messages = [systemMessage, ...messages];
+            }
+
             const response = await axios.post(
                 this.openRouterApiUrl,
                 {
                     model: request.model || 'openai/gpt-3.5-turbo',
-                    messages: request.messages,
+                    messages: messages,
                     temperature: request.temperature || 0.7,
                     max_tokens: request.max_tokens || 1000,
                 },

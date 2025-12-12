@@ -13,18 +13,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, FileText, X } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
+interface Document {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  fund?: {
+    name: string;
+    code: string;
+  };
+}
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState("openai/gpt-3.5-turbo");
+  const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch available models
@@ -32,6 +51,15 @@ export default function ChatPage() {
     queryKey: ["chat-models"],
     queryFn: async () => {
       const { data } = await api.get("/chat/models");
+      return data;
+    },
+  });
+
+  // Fetch user's documents
+  const { data: documentsData } = useQuery({
+    queryKey: ["chat-documents"],
+    queryFn: async () => {
+      const { data } = await api.get("/chat/documents");
       return data;
     },
   });
@@ -44,6 +72,16 @@ export default function ChatPage() {
         { role: "user", content: userMessage },
       ];
 
+      // Prepare document context
+      const documentContext = selectedDocuments.map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        type: doc.type,
+        status: doc.status,
+        fundName: doc.fund?.name,
+        fundCode: doc.fund?.code,
+      }));
+
       const { data } = await api.post("/chat/completions", {
         model: selectedModel,
         messages: newMessages.map((m) => ({
@@ -52,6 +90,7 @@ export default function ChatPage() {
         })),
         temperature: 0.7,
         max_tokens: 1000,
+        documentContext: documentContext.length > 0 ? documentContext : undefined,
       });
 
       return data;
@@ -83,6 +122,21 @@ export default function ChatPage() {
     chatMutation.mutate(userMessage);
   };
 
+  const toggleDocument = (doc: Document) => {
+    setSelectedDocuments((prev) => {
+      const isSelected = prev.some((d) => d.id === doc.id);
+      if (isSelected) {
+        return prev.filter((d) => d.id !== doc.id);
+      } else {
+        return [...prev, doc];
+      }
+    });
+  };
+
+  const removeDocument = (docId: string) => {
+    setSelectedDocuments((prev) => prev.filter((d) => d.id !== docId));
+  };
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,24 +146,88 @@ export default function ChatPage() {
     <div className="h-[calc(100vh-6rem)] flex flex-col p-4">
       <Card className="flex-1 flex flex-col">
         <CardHeader className="border-b">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               AI Assistant
             </CardTitle>
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent>
-                {modelsData?.models?.map((model: string) => (
-                  <SelectItem key={model} value={model}>
-                    {model.split("/")[1] || model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              {/* Document Selector */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Documents ({selectedDocuments.length})
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 max-h-96 overflow-y-auto">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Select Documents</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Choose documents to discuss with the AI
+                    </p>
+                    {documentsData?.documents?.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-4">
+                        No documents available
+                      </p>
+                    ) : (
+                      documentsData?.documents?.map((doc: Document) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-start space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
+                          onClick={() => toggleDocument(doc)}
+                        >
+                          <Checkbox
+                            checked={selectedDocuments.some((d) => d.id === doc.id)}
+                            onCheckedChange={() => toggleDocument(doc)}
+                          />
+                          <div className="flex-1 text-sm">
+                            <p className="font-medium">{doc.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {doc.type} • {doc.status}
+                              {doc.fund && ` • ${doc.fund.name}`}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Model Selector */}
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {modelsData?.models?.map((model: string) => (
+                    <SelectItem key={model} value={model}>
+                      {model.split("/")[1] || model}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {/* Selected Documents Pills */}
+          {selectedDocuments.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {selectedDocuments.map((doc) => (
+                <Badge key={doc.id} variant="secondary" className="gap-1">
+                  <FileText className="h-3 w-3" />
+                  {doc.title}
+                  <button
+                    onClick={() => removeDocument(doc.id)}
+                    className="ml-1 hover:bg-destructive/20 rounded-full"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -122,8 +240,8 @@ export default function ChatPage() {
                     Welcome to Audit Vault AI Assistant
                   </h3>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Ask me anything about your documents, compliance, or audit
-                    processes.
+                    Select documents above and ask me anything about compliance,
+                    audits, or your documents.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4 max-w-2xl">
@@ -131,19 +249,19 @@ export default function ChatPage() {
                     variant="outline"
                     className="text-left justify-start"
                     onClick={() => {
-                      setInput("Summarize the compliance requirements");
+                      setInput("Summarize the selected documents");
                     }}
                   >
-                    Summarize compliance requirements
+                    Summarize selected documents
                   </Button>
                   <Button
                     variant="outline"
                     className="text-left justify-start"
                     onClick={() => {
-                      setInput("What documents are pending review?");
+                      setInput("What is the compliance status?");
                     }}
                   >
-                    Check pending documents
+                    Check compliance status
                   </Button>
                   <Button
                     variant="outline"
@@ -158,10 +276,10 @@ export default function ChatPage() {
                     variant="outline"
                     className="text-left justify-start"
                     onClick={() => {
-                      setInput("Help me with document classification");
+                      setInput("What documents need review?");
                     }}
                   >
-                    Document classification help
+                    Documents needing review
                   </Button>
                 </div>
               </div>
@@ -216,7 +334,11 @@ export default function ChatPage() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder={
+                selectedDocuments.length > 0
+                  ? "Ask about the selected documents..."
+                  : "Type your message..."
+              }
               disabled={chatMutation.isPending}
               className="flex-1"
             />
@@ -232,6 +354,11 @@ export default function ChatPage() {
             </Button>
           </form>
           <p className="text-xs text-muted-foreground mt-2">
+            {selectedDocuments.length > 0 && (
+              <span className="text-blue-600 dark:text-blue-400">
+                {selectedDocuments.length} document(s) selected •{" "}
+              </span>
+            )}
             {modelsData?.models?.length
               ? `Using ${selectedModel.split("/")[1] || selectedModel}`
               : "Configure OPENROUTER_API_KEY to enable chat"}
