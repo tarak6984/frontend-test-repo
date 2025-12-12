@@ -1,4 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import axios from 'axios';
 
 export interface ChatMessage {
@@ -16,6 +17,8 @@ export interface DocumentContext {
 }
 
 export interface ChatCompletionRequest {
+    sessionId?: string;
+    userId?: string;
     model: string;
     messages: ChatMessage[];
     temperature?: number;
@@ -28,7 +31,7 @@ export class ChatService {
     private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
     private readonly apiKey: string;
 
-    constructor() {
+    constructor(private prisma: PrismaService) {
         // Get API key from environment variable
         this.apiKey = process.env.OPENROUTER_API_KEY || '';
 
@@ -46,6 +49,42 @@ export class ChatService {
         }
 
         try {
+            // Create session if not provided
+            let sessionId = request.sessionId;
+            if (!sessionId && request.userId) {
+                const session = await this.prisma.chatSession.create({
+                    data: {
+                        userId: request.userId,
+                        title: 'New Chat'
+                    }
+                });
+                sessionId = session.id;
+            }
+
+            // Save user message to database
+            const userMessage = request.messages[request.messages.length - 1];
+            if (sessionId && userMessage.role === 'user') {
+                await this.prisma.chatMessage.create({
+                    data: {
+                        sessionId,
+                        role: userMessage.role,
+                        content: userMessage.content
+                    }
+                });
+
+                // Update session title from first message
+                const messageCount = await this.prisma.chatMessage.count({
+                    where: { sessionId }
+                });
+                if (messageCount === 1) {
+                    const title = userMessage.content.substring(0, 50) + (userMessage.content.length > 50 ? '...' : '');
+                    await this.prisma.chatSession.update({
+                        where: { id: sessionId },
+                        data: { title }
+                    });
+                }
+            }
+
             // Prepare messages with document context if provided
             let messages = [...request.messages];
 
@@ -82,7 +121,22 @@ export class ChatService {
                 }
             );
 
-            return response.data;
+            // Save assistant response to database
+            if (sessionId && response.data.choices?.[0]?.message) {
+                const assistantMessage = response.data.choices[0].message;
+                await this.prisma.chatMessage.create({
+                    data: {
+                        sessionId,
+                        role: 'assistant',
+                        content: assistantMessage.content
+                    }
+                });
+            }
+
+            return {
+                ...response.data,
+                sessionId // Return session ID to frontend
+            };
         } catch (error: any) {
             console.error('OpenRouter API Error:', error.response?.data || error.message);
 

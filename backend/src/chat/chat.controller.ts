@@ -13,8 +13,11 @@ export class ChatController {
     ) { }
 
     @Post('completions')
-    async createCompletion(@Body() request: ChatCompletionDto) {
-        return this.chatService.createChatCompletion(request);
+    async createCompletion(@Body() request: ChatCompletionDto, @Req() req: any) {
+        return this.chatService.createChatCompletion({
+            ...request,
+            userId: req.user.userId
+        });
     }
 
     @Get('models')
