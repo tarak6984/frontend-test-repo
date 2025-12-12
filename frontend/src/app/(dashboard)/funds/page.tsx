@@ -328,7 +328,6 @@ export default function FundsPage() {
             variant={viewMode === "cards" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode("cards")}
-            className={resolvedTheme === "dark" ? "bg-gray-100" : ""}
           >
             <LayoutGrid className="h-4 w-4" />
           </Button>
@@ -336,7 +335,6 @@ export default function FundsPage() {
             variant={viewMode === "table" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode("table")}
-            className={resolvedTheme === "dark" ? "bg-gray-100" : ""}
           >
             <TableIcon className="h-4 w-4" />
           </Button>
