@@ -102,7 +102,7 @@ export default function UsersPage() {
     data: any[];
     showActions?: boolean;
   }) => (
-    <div className="rounded-md border border-gray-200 bg-white overflow-x-auto">
+    <div className="rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -171,10 +171,8 @@ export default function UsersPage() {
       </div>
     );
 
-  const containerStyle = { colorScheme: "light" };
-
   return (
-    <div className="space-y-6" style={containerStyle}>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>

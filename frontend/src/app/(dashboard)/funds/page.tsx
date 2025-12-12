@@ -111,7 +111,7 @@ export default function FundsPage() {
     onError: (err: any) => {
       toast.error(
         err.response?.data?.message ||
-          "Failed to create fund. Check if fund code already exists."
+        "Failed to create fund. Check if fund code already exists."
       );
     },
   });
@@ -151,9 +151,8 @@ export default function FundsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1
-            className={`text-3xl font-bold tracking-tight ${
-              resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className={`text-3xl font-bold tracking-tight ${resolvedTheme === "dark" ? "text-white" : "text-gray-900"
+              }`}
           >
             Funds
           </h1>
@@ -293,19 +292,17 @@ export default function FundsPage() {
       >
         <div className="relative flex-1">
           <Search
-            className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-              resolvedTheme === "dark" ? "text-white" : "text-gray-500"
-            }`}
+            className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${resolvedTheme === "dark" ? "text-white" : "text-gray-500"
+              }`}
           />
           <Input
             placeholder="Search funds by name or code..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`pl-9 bg-white border-gray-200 ${
-              resolvedTheme === "dark"
+            className={`pl-9 bg-white border-gray-200 ${resolvedTheme === "dark"
                 ? "text-white placeholder:text-white/70"
                 : ""
-            }`}
+              }`}
             style={
               resolvedTheme === "dark"
                 ? { color: "white" }
@@ -350,9 +347,8 @@ export default function FundsPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredFunds && filteredFunds.length === 0 ? (
             <p
-              className={`col-span-full text-center py-12 ${
-                resolvedTheme === "dark" ? "text-white" : "text-gray-600"
-              }`}
+              className={`col-span-full text-center py-12 ${resolvedTheme === "dark" ? "text-white" : "text-gray-600"
+                }`}
             >
               No funds found.
             </p>
@@ -360,42 +356,31 @@ export default function FundsPage() {
             filteredFunds?.map((fund: any) => (
               <Card
                 key={fund.id}
-                className={
-                  resolvedTheme === "dark"
-                    ? "bg-white border-gray-200"
-                    : "bg-white border-gray-200"
-                }
-                style={{
-                  backgroundColor:
-                    resolvedTheme === "dark" ? "#ffffff" : undefined,
-                }}
+                className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle
-                        className={`text-lg ${
-                          resolvedTheme === "dark"
+                        className={`text-lg ${resolvedTheme === "dark"
                             ? "text-white"
                             : "text-gray-900"
-                        }`}
+                          }`}
                       >
                         {fund.name}
                       </CardTitle>
                       <CardDescription
-                        className={`mt-1 ${
-                          resolvedTheme === "dark"
+                        className={`mt-1 ${resolvedTheme === "dark"
                             ? "text-white"
                             : "text-gray-600"
-                        }`}
+                          }`}
                       >
                         <Badge
                           variant="outline"
-                          className={`font-mono text-xs bg-white ${
-                            resolvedTheme === "dark"
+                          className={`font-mono text-xs bg-white ${resolvedTheme === "dark"
                               ? "text-white border-white"
                               : ""
-                          }`}
+                            }`}
                         >
                           {fund.code}
                         </Badge>
@@ -417,11 +402,10 @@ export default function FundsPage() {
                           Region:
                         </span>
                         <span
-                          className={`font-medium ${
-                            resolvedTheme === "dark"
+                          className={`font-medium ${resolvedTheme === "dark"
                               ? "text-white"
                               : "text-gray-900"
-                          }`}
+                            }`}
                         >
                           {fund.region}
                         </span>
@@ -439,11 +423,10 @@ export default function FundsPage() {
                           Currency:
                         </span>
                         <span
-                          className={`font-medium ${
-                            resolvedTheme === "dark"
+                          className={`font-medium ${resolvedTheme === "dark"
                               ? "text-white"
                               : "text-gray-900"
-                          }`}
+                            }`}
                         >
                           {fund.currency}
                         </span>
@@ -460,11 +443,10 @@ export default function FundsPage() {
                         Documents:
                       </span>
                       <span
-                        className={`font-medium ${
-                          resolvedTheme === "dark"
+                        className={`font-medium ${resolvedTheme === "dark"
                             ? "text-white"
                             : "text-gray-900"
-                        }`}
+                          }`}
                       >
                         {fund._count?.documents || 0}
                       </span>
@@ -479,7 +461,7 @@ export default function FundsPage() {
         <div
           className="rounded-md border border-gray-200 bg-white"
           style={{
-            
+
           }}
         >
           <Table>
@@ -514,9 +496,8 @@ export default function FundsPage() {
                   Currency
                 </TableHead>
                 <TableHead
-                  className={`text-right ${
-                    resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`text-right ${resolvedTheme === "dark" ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   Documents
                 </TableHead>
@@ -527,9 +508,8 @@ export default function FundsPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className={`h-24 text-center ${
-                      resolvedTheme === "dark" ? "text-white" : "text-gray-600"
-                    }`}
+                    className={`h-24 text-center ${resolvedTheme === "dark" ? "text-white" : "text-gray-600"
+                      }`}
                   >
                     No funds found.
                   </TableCell>
@@ -546,21 +526,19 @@ export default function FundsPage() {
                     >
                       <Badge
                         variant="outline"
-                        className={`font-mono bg-white ${
-                          resolvedTheme === "dark"
+                        className={`font-mono bg-white ${resolvedTheme === "dark"
                             ? "text-white border-white"
                             : ""
-                        }`}
+                          }`}
                       >
                         {fund.code}
                       </Badge>
                     </TableCell>
                     <TableCell
-                      className={`font-medium ${
-                        resolvedTheme === "dark"
+                      className={`font-medium ${resolvedTheme === "dark"
                           ? "text-white"
                           : "text-gray-900"
-                      }`}
+                        }`}
                     >
                       {fund.name}
                     </TableCell>
@@ -583,11 +561,10 @@ export default function FundsPage() {
                       {fund.currency || "-"}
                     </TableCell>
                     <TableCell
-                      className={`text-right ${
-                        resolvedTheme === "dark"
+                      className={`text-right ${resolvedTheme === "dark"
                           ? "text-white"
                           : "text-gray-900"
-                      }`}
+                        }`}
                     >
                       {fund._count?.documents || 0}
                     </TableCell>
