@@ -186,7 +186,7 @@ export default function FundsPage() {
               </Button>
             </DialogTrigger>
             <DialogContent
-              className="bg-white"
+              className="bg-white dark:bg-gray-900"
               style={{ backgroundColor: "#ffffff" }}
             >
               <DialogHeader>
@@ -491,7 +491,7 @@ export default function FundsPage() {
         <div
           className="rounded-md border border-gray-200 bg-white"
           style={{
-            backgroundColor: resolvedTheme === "dark" ? "#ffffff" : undefined,
+            
           }}
         >
           <Table>
@@ -548,7 +548,7 @@ export default function FundsPage() {
                 </TableRow>
               ) : (
                 filteredFunds?.map((fund: any) => (
-                  <TableRow key={fund.id} className="bg-white">
+                  <TableRow key={fund.id} className="bg-white dark:bg-gray-900">
                     <TableCell
                       className={
                         resolvedTheme === "dark"
