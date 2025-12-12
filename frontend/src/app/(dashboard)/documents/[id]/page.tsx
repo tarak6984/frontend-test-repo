@@ -276,9 +276,13 @@ export default function DocumentDetailsPage() {
                         <strong>{log.action}</strong>
                       </p>
                       {log.details && (
-                        <pre className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs overflow-x-auto">
-                          {JSON.stringify(log.details, null, 2)}
-                        </pre>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {log.details.oldStatus && log.details.newStatus
+                            ? `Changed status from ${log.details.oldStatus} to ${log.details.newStatus}`
+                            : Object.entries(log.details)
+                              .map(([key, value]) => `${key}: ${value}`)
+                              .join(", ")}
+                        </p>
                       )}
                     </div>
                   </div>
