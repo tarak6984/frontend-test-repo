@@ -67,19 +67,7 @@ export default function FundsPage() {
   const [regionFilter, setRegionFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const queryClient = useQueryClient();
-  const [pageStyle, setPageStyle] = useState<React.CSSProperties>({});
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-    const prefersLight = mediaQuery.matches;
-    const effectiveTheme = resolvedTheme || (prefersLight ? "light" : "dark");
-
-    if (effectiveTheme === "light" || prefersLight) {
-      setPageStyle({ colorScheme: "light" });
-    } else if (effectiveTheme === "dark") {
-      setPageStyle({ colorScheme: "light" });
-    }
-  }, [resolvedTheme]);
 
   const {
     data: funds,
@@ -159,7 +147,7 @@ export default function FundsPage() {
   const containerClass = resolvedTheme === "dark" ? "space-y-6" : "space-y-6";
 
   return (
-    <div className={containerClass} style={pageStyle}>
+    <div className={containerClass}>
       <div className="flex items-center justify-between">
         <div>
           <h1
