@@ -28,6 +28,11 @@ export class FundsController {
         return this.fundsService.findOne(id);
     }
 
+    @Get(':id/details')
+    findOneWithStats(@Param('id') id: string) {
+        return this.fundsService.findOneWithStats(id);
+    }
+
     @Patch(':id')
     update(@Param('id') id: string, @Body() updateFundDto: UpdateFundDto, @Req() req: any) {
         if (req.user.role !== UserRole.ADMIN && req.user.role !== UserRole.COMPLIANCE_OFFICER) {
