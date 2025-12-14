@@ -200,7 +200,7 @@ export default function FundDetailPage() {
             {Object.entries(statusCounts).map(([status, count]) => (
               <div key={status} className="text-center">
                 <StatusBadge status={status as any} />
-                <div className="text-2xl font-bold mt-2">{count}</div>
+                <div className="text-2xl font-bold mt-2">{count as number}</div>
               </div>
             ))}
           </div>
