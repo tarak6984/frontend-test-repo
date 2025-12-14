@@ -7,6 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/auth-context";
+import { FundCardSkeleton } from "@/components/skeletons/card-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -49,7 +52,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Loader2, Search, LayoutGrid, TableIcon } from "lucide-react";
+import { Plus, Loader2, Search, LayoutGrid, TableIcon, PieChart } from "lucide-react";
 import { useTheme } from "next-themes";
 
 const fundSchema = z.object({
@@ -139,8 +142,13 @@ export default function FundsPage() {
 
   if (isLoading)
     return (
-      <div className="flex justify-center p-12">
-        <Loader2 className="animate-spin" />
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-full" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <FundCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
 
@@ -344,12 +352,33 @@ export default function FundsPage() {
       {viewMode === "cards" ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredFunds && filteredFunds.length === 0 ? (
-            <p
-              className={`col-span-full text-center py-12 ${resolvedTheme === "dark" ? "text-white" : "text-gray-600"
-                }`}
-            >
-              No funds found.
-            </p>
+            <div className="col-span-full">
+              {searchQuery || regionFilter !== "all" ? (
+                <EmptyState
+                  icon={PieChart}
+                  title="No funds match your search"
+                  description="Try different search terms or clear your filters."
+                  action={{
+                    label: "Clear Search",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setRegionFilter("all");
+                    }
+                  }}
+                />
+              ) : (
+                <EmptyState
+                  icon={PieChart}
+                  title="No funds available"
+                  description="Create your first fund to start organizing and managing compliance documents by investment portfolio."
+                  action={isAdmin ? {
+                    label: "Create Fund",
+                    icon: Plus,
+                    onClick: () => setDialogOpen(true)
+                  } : undefined}
+                />
+              )}
+            </div>
           ) : (
             filteredFunds?.map((fund: any) => (
               <Card

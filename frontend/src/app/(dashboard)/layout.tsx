@@ -18,6 +18,7 @@ import {
   MessageSquare,
   LogOut,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function DashboardLayout({
   children,
@@ -175,6 +176,7 @@ export default function DashboardLayout({
             AuditVault
           </span>
           <div className="md:ml-auto flex items-center gap-2">
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"

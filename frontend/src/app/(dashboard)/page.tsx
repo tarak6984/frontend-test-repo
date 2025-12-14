@@ -7,6 +7,9 @@ import { ComplianceChart } from "@/components/dashboard/compliance-chart";
 import { UpcomingDeadlines } from "@/components/dashboard/upcoming-deadlines";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { Loader2 } from "lucide-react";
+import { StatsCardSkeleton, TableSkeleton } from "@/components/skeletons/card-skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useViewport,
   adaptiveLayout,
@@ -19,6 +22,10 @@ import { Fund } from "@/types";
 
 export default function DashboardPage() {
   const viewport = useViewport();
+  const layoutClasses = adaptiveLayout(viewport);
+  const spacingClasses = getResponsiveSpacing(viewport);
+  const cardLayout = getCardLayout(viewport);
+
   const { data: documents, isLoading: docsLoading } = useQuery({
     queryKey: ["documents-all"],
     queryFn: async () => {
@@ -37,15 +44,31 @@ export default function DashboardPage() {
 
   if (docsLoading || fundsLoading) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-[200px] mb-2" />
+          <Skeleton className="h-4 w-[300px]" />
+        </div>
+        
+        <div className={cn(layoutClasses, viewport.isMobile && "flex-col")}>
+          {[...Array(4)].map((_, i) => (
+            <StatsCardSkeleton key={i} />
+          ))}
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-[250px]" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[300px] w-full" />
+          </CardContent>
+        </Card>
+        
+        <TableSkeleton rows={5} />
       </div>
     );
   }
-
-  const layoutClasses = adaptiveLayout(viewport);
-  const spacingClasses = getResponsiveSpacing(viewport);
-  const cardLayout = getCardLayout(viewport);
 
   return (
     <div className={cn("w-full", spacingClasses)}>

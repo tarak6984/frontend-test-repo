@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Document, DocStatus, DocType } from "@/types";
+import { TableSkeleton } from "@/components/skeletons/card-skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -40,6 +43,8 @@ import {
   Search,
   MessageSquare,
   Check,
+  Upload,
+  FileText,
 } from "lucide-react";
 import { UploadDocumentModal } from "@/components/dashboard/upload-document-modal";
 import { useAuth } from "@/context/auth-context";
@@ -231,13 +236,34 @@ export default function DocumentsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-12">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin inline" /> Loading...
-        </div>
+        <TableSkeleton rows={10} />
       ) : filteredDocuments?.length === 0 ? (
-        <div className="text-center p-12 border rounded-lg">
-          <p className="text-muted-foreground">No documents found.</p>
-        </div>
+        searchQuery || statusFilter !== "all" || typeFilter !== "all" ? (
+          <EmptyState
+            icon={FileText}
+            title="No documents match your filters"
+            description="Try adjusting your search terms or filters to find what you're looking for."
+            action={{
+              label: "Clear Filters",
+              onClick: () => {
+                setSearchQuery("");
+                setStatusFilter("all");
+                setTypeFilter("all");
+              }
+            }}
+          />
+        ) : (
+          <EmptyState
+            icon={Upload}
+            title="No documents yet"
+            description="Get started by uploading your first compliance document to begin tracking and managing your regulatory requirements."
+            action={canUpload ? {
+              label: "Upload Document",
+              icon: Upload,
+              onClick: () => {}
+            } : undefined}
+          />
+        )
       ) : (
         <div className="block rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-x-auto">
           <Table>
@@ -275,12 +301,7 @@ export default function DocumentsPage() {
                   )}
                   {visibleColumns.status && (
                     <TableCell>
-                      <Badge
-                        className={getStatusColor(doc.status)}
-                        variant="secondary"
-                      >
-                        {doc.status.replace("_", " ")}
-                      </Badge>
+                      <StatusBadge status={doc.status} animated />
                     </TableCell>
                   )}
                   {visibleColumns.uploaded && (
