@@ -147,6 +147,18 @@ export class DocumentsService {
         const doc = await this.prisma.document.findUnique({ where: { id } });
         if (!doc) throw new NotFoundException('Document not found');
 
+        // Delete associated audit logs first
+        await this.prisma.auditLog.deleteMany({ where: { documentId: id } });
+
+        // Delete the physical file from storage
+        try {
+            await this.storageService.deleteFile(doc.fileKey);
+        } catch (error) {
+            console.warn(`Failed to delete file ${doc.fileKey} from storage:`, error);
+            // Continue with document deletion even if file deletion fails
+        }
+
+        // Finally, delete the document record
         return this.prisma.document.delete({ where: { id } });
     }
 }

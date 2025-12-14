@@ -26,4 +26,11 @@ export class StorageService {
         }
         return fs.createReadStream(filePath);
     }
+
+    async deleteFile(fileKey: string): Promise<void> {
+        const filePath = path.join(this.uploadDir, fileKey);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+    }
 }
