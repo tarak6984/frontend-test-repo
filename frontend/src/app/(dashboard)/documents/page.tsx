@@ -85,7 +85,7 @@ export default function DocumentsPage() {
       const result = exportToExcel({
         filename: 'audit-vault-documents',
         sheetName: 'Documents',
-        data: filteredDocuments,
+        data: filteredDocuments || [],
         columns: [
           { header: 'Title', key: 'title' },
           { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
