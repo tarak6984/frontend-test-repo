@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
 import { FundCardSkeleton } from "@/components/skeletons/card-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,6 +55,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Loader2, Search, LayoutGrid, TableIcon, PieChart } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 const fundSchema = z.object({
   code: z.string().min(2, "Code must be at least 2 characters"),
@@ -65,6 +67,7 @@ const fundSchema = z.object({
 export default function FundsPage() {
   const { user } = useAuth();
   const { theme, resolvedTheme } = useTheme();
+  const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [regionFilter, setRegionFilter] = useState("all");
@@ -381,40 +384,81 @@ export default function FundsPage() {
             </div>
           ) : (
             filteredFunds?.map((fund: any) => (
-              <Card
-                key={fund.id}
-                className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle
-                        className={`text-lg ${resolvedTheme === "dark"
-                          ? "text-white"
-                          : "text-gray-900"
-                          }`}
-                      >
-                        {fund.name}
-                      </CardTitle>
-                      <CardDescription
-                        className={`mt-1 ${resolvedTheme === "dark"
-                          ? "text-white"
-                          : "text-gray-600"
-                          }`}
-                      >
-                        <Badge
-                          variant="outline"
-                          className="font-mono text-xs"
+              <Link key={fund.id} href={`/funds/${fund.id}`}>
+                <Card
+                  className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:shadow-lg transition-shadow cursor-pointer"
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle
+                          className={`text-lg ${resolvedTheme === "dark"
+                            ? "text-white"
+                            : "text-gray-900"
+                            }`}
                         >
-                          {fund.code}
-                        </Badge>
-                      </CardDescription>
+                          {fund.name}
+                        </CardTitle>
+                        <CardDescription
+                          className={`mt-1 ${resolvedTheme === "dark"
+                            ? "text-white"
+                            : "text-gray-600"
+                            }`}
+                        >
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-xs"
+                          >
+                            {fund.code}
+                          </Badge>
+                        </CardDescription>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    {fund.region && (
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      {fund.region && (
+                        <div className="flex justify-between">
+                          <span
+                            className={
+                              resolvedTheme === "dark"
+                                ? "text-white"
+                                : "text-gray-500"
+                            }
+                          >
+                            Region:
+                          </span>
+                          <span
+                            className={`font-medium ${resolvedTheme === "dark"
+                              ? "text-white"
+                              : "text-gray-900"
+                              }`}
+                          >
+                            {fund.region}
+                          </span>
+                        </div>
+                      )}
+                      {fund.currency && (
+                        <div className="flex justify-between">
+                          <span
+                            className={
+                              resolvedTheme === "dark"
+                                ? "text-white"
+                                : "text-gray-500"
+                            }
+                          >
+                            Currency:
+                          </span>
+                          <span
+                            className={`font-medium ${resolvedTheme === "dark"
+                              ? "text-white"
+                              : "text-gray-900"
+                              }`}
+                          >
+                            {fund.currency}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span
                           className={
@@ -423,7 +467,7 @@ export default function FundsPage() {
                               : "text-gray-500"
                           }
                         >
-                          Region:
+                          Documents:
                         </span>
                         <span
                           className={`font-medium ${resolvedTheme === "dark"
@@ -431,53 +475,13 @@ export default function FundsPage() {
                             : "text-gray-900"
                             }`}
                         >
-                          {fund.region}
+                          {fund._count?.documents || 0}
                         </span>
                       </div>
-                    )}
-                    {fund.currency && (
-                      <div className="flex justify-between">
-                        <span
-                          className={
-                            resolvedTheme === "dark"
-                              ? "text-white"
-                              : "text-gray-500"
-                          }
-                        >
-                          Currency:
-                        </span>
-                        <span
-                          className={`font-medium ${resolvedTheme === "dark"
-                            ? "text-white"
-                            : "text-gray-900"
-                            }`}
-                        >
-                          {fund.currency}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span
-                        className={
-                          resolvedTheme === "dark"
-                            ? "text-white"
-                            : "text-gray-500"
-                        }
-                      >
-                        Documents:
-                      </span>
-                      <span
-                        className={`font-medium ${resolvedTheme === "dark"
-                          ? "text-white"
-                          : "text-gray-900"
-                          }`}
-                      >
-                        {fund._count?.documents || 0}
-                      </span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))
           )}
         </div>
@@ -536,7 +540,11 @@ export default function FundsPage() {
                 </TableRow>
               ) : (
                 filteredFunds?.map((fund: any) => (
-                  <TableRow key={fund.id} className="bg-white dark:bg-gray-900">
+                  <TableRow 
+                    key={fund.id} 
+                    className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                    onClick={() => router.push(`/funds/${fund.id}`)}
+                  >
                     <TableCell
                       className={
                         resolvedTheme === "dark"
