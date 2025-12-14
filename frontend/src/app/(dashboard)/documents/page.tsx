@@ -45,10 +45,14 @@ import {
   Check,
   Upload,
   FileText,
+  FileSpreadsheet,
+  FileDown,
 } from "lucide-react";
 import { UploadDocumentModal } from "@/components/dashboard/upload-document-modal";
 import { useAuth } from "@/context/auth-context";
+import { exportToExcel, exportToCSV } from "@/lib/export-utils";
 import { toast } from "sonner";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 
 export default function DocumentsPage() {
@@ -66,6 +70,51 @@ export default function DocumentsPage() {
     status: true,
     uploaded: true,
   });
+
+  const handleExportExcel = () => {
+    const result = exportToExcel({
+      filename: 'audit-vault-documents',
+      sheetName: 'Documents',
+      data: filteredDocuments,
+      columns: [
+        { header: 'Title', key: 'title' },
+        { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
+        { header: 'Type', key: 'type', format: (type: string) => type.replace('_', ' ') },
+        { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
+        { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
+        { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
+        { header: 'File Name', key: 'fileName' },
+      ],
+    });
+
+    if (result.success) {
+      toast.success(`Exported ${filteredDocuments.length} documents to ${result.filename}`);
+    } else {
+      toast.error('Export failed: ' + result.error);
+    }
+  };
+
+  const handleExportCSV = () => {
+    const result = exportToCSV({
+      filename: 'audit-vault-documents',
+      data: filteredDocuments,
+      columns: [
+        { header: 'Title', key: 'title' },
+        { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
+        { header: 'Type', key: 'type', format: (type: string) => type.replace('_', ' ') },
+        { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
+        { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
+        { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
+        { header: 'File Name', key: 'fileName' },
+      ],
+    });
+
+    if (result.success) {
+      toast.success(`Exported ${filteredDocuments.length} documents to ${result.filename}`);
+    } else {
+      toast.error('Export failed: ' + result.error);
+    }
+  };
 
   const {
     data: documents,
@@ -176,6 +225,25 @@ export default function DocumentsPage() {
               ))}
             </SelectContent>
           </Select>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex gap-2">
+                <FileDown className="h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportExcel}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Export to Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCSV}>
+                <FileText className="mr-2 h-4 w-4" />
+                Export to CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
