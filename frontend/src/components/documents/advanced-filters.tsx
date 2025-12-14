@@ -105,31 +105,32 @@ export function AdvancedFiltersPanel({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Advanced Filters</SheetTitle>
-          <SheetDescription>
+      <SheetContent className="overflow-y-auto w-full sm:max-w-md">
+        <SheetHeader className="pb-4">
+          <SheetTitle className="text-lg">Advanced Filters</SheetTitle>
+          <SheetDescription className="text-xs">
             Narrow down your document search with multiple criteria
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 py-6">
+        <div className="space-y-4 py-4">
           {/* Full-text Search */}
-          <div className="space-y-2">
-            <Label>Search in all fields</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Search in all fields</Label>
             <Input
               placeholder="Search title, description, file name..."
               value={localFilters.searchQuery}
               onChange={(e) =>
                 setLocalFilters({ ...localFilters, searchQuery: e.target.value })
               }
+              className="h-9 text-sm"
             />
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Status</Label>
+            <div className="grid grid-cols-2 gap-1.5">
               {Object.values(DocStatus).map((status) => (
                 <Button
                   key={status}
@@ -139,7 +140,7 @@ export function AdvancedFiltersPanel({
                   }
                   size="sm"
                   onClick={() => toggleArrayFilter("status", status)}
-                  className="justify-start"
+                  className="justify-start h-8 text-xs px-2 border-gray-200 dark:border-gray-700"
                 >
                   {status.replace("_", " ")}
                 </Button>
@@ -148,9 +149,9 @@ export function AdvancedFiltersPanel({
           </div>
 
           {/* Type Filter */}
-          <div className="space-y-2">
-            <Label>Document Type</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Document Type</Label>
+            <div className="grid grid-cols-2 gap-1.5">
               {Object.values(DocType).map((type) => (
                 <Button
                   key={type}
@@ -160,7 +161,7 @@ export function AdvancedFiltersPanel({
                   }
                   size="sm"
                   onClick={() => toggleArrayFilter("type", type)}
-                  className="justify-start text-xs"
+                  className="justify-start h-8 text-xs px-2 border-gray-200 dark:border-gray-700"
                 >
                   {type.replace("_", " ")}
                 </Button>
@@ -170,9 +171,9 @@ export function AdvancedFiltersPanel({
 
           {/* Fund Filter */}
           {funds.length > 0 && (
-            <div className="space-y-2">
-              <Label>Funds</Label>
-              <div className="space-y-1 max-h-40 overflow-y-auto border rounded-md p-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Funds</Label>
+              <div className="space-y-1 max-h-32 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-1.5">
                 {funds.map((fund) => (
                   <Button
                     key={fund.id}
@@ -182,7 +183,7 @@ export function AdvancedFiltersPanel({
                     }
                     size="sm"
                     onClick={() => toggleArrayFilter("fundIds", fund.id)}
-                    className="w-full justify-start"
+                    className="w-full justify-start h-7 text-xs px-2"
                   >
                     {fund.name}
                   </Button>
@@ -192,19 +193,20 @@ export function AdvancedFiltersPanel({
           )}
 
           {/* Date Range */}
-          <div className="space-y-2">
-            <Label>Date Range</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Date Range</Label>
+            <div className="grid grid-cols-2 gap-1.5">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
-                      "justify-start text-left font-normal",
+                      "justify-start text-left font-normal h-9 text-xs px-2 border-gray-200 dark:border-gray-700",
                       !localFilters.dateFrom && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
                     {localFilters.dateFrom ? (
                       format(localFilters.dateFrom, "PP")
                     ) : (
@@ -228,12 +230,13 @@ export function AdvancedFiltersPanel({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
-                      "justify-start text-left font-normal",
+                      "justify-start text-left font-normal h-9 text-xs px-2 border-gray-200 dark:border-gray-700",
                       !localFilters.dateTo && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
                     {localFilters.dateTo ? (
                       format(localFilters.dateTo, "PP")
                     ) : (
@@ -256,12 +259,12 @@ export function AdvancedFiltersPanel({
           </div>
         </div>
 
-        <SheetFooter className="flex gap-2">
-          <Button variant="outline" onClick={handleReset} className="flex-1">
-            <X className="mr-2 h-4 w-4" />
+        <SheetFooter className="flex gap-2 pt-4">
+          <Button variant="outline" onClick={handleReset} size="sm" className="flex-1 h-9 text-xs">
+            <X className="mr-1.5 h-3.5 w-3.5" />
             Clear All
           </Button>
-          <Button onClick={handleApply} className="flex-1">
+          <Button onClick={handleApply} size="sm" className="flex-1 h-9 text-xs">
             Apply Filters
           </Button>
         </SheetFooter>
