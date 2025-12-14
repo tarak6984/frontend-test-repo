@@ -17,6 +17,8 @@ import {
   X,
   MessageSquare,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -29,6 +31,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -80,20 +83,24 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col fixed h-full z-50 transition-transform duration-300 ease-in-out",
+          "bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col fixed h-full z-50 transition-all duration-300 ease-in-out",
           "md:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          sidebarCollapsed ? "md:w-20 w-64" : "w-64"
         )}
       >
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-800">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
           <Link
             href="/"
-            className="font-bold text-xl text-blue-600 dark:text-blue-400 flex items-center gap-2"
+            className={cn(
+              "font-bold text-xl text-blue-600 dark:text-blue-400 flex items-center gap-2 transition-all",
+              sidebarCollapsed && "md:mx-auto"
+            )}
           >
-            <div className="h-8 w-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center text-white">
+            <div className="h-8 w-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center text-white shrink-0">
               <Files className="h-5 w-5" />
             </div>
-            <span className="hidden sm:inline">AuditVault</span>
+            {!sidebarCollapsed && <span className="sm:inline">AuditVault</span>}
           </Link>
           <Button
             variant="ghost"
@@ -115,54 +122,94 @@ export default function DashboardLayout({
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors relative group",
                   isActive
                     ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100",
+                  sidebarCollapsed && "md:justify-center"
                 )}
+                title={sidebarCollapsed ? item.name : undefined}
               >
                 <item.icon
                   className={cn(
-                    "h-4 w-4",
+                    "h-4 w-4 shrink-0",
                     isActive
                       ? "text-blue-700 dark:text-blue-300"
                       : "text-gray-500 dark:text-gray-400"
                   )}
                 />
-                {item.name}
+                {!sidebarCollapsed && <span>{item.name}</span>}
+                {sidebarCollapsed && (
+                  <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded hidden group-hover:block whitespace-nowrap z-50">
+                    {item.name}
+                  </span>
+                )}
               </Link>
             );
           })}
         </div>
         <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <Avatar className="h-9 w-9 border border-gray-200 dark:border-gray-700">
+          {/* Collapse Toggle Button - Desktop Only */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={cn(
+              "hidden md:flex w-full gap-2",
+              sidebarCollapsed ? "justify-center px-0" : "justify-start"
+            )}
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <>
+                <ChevronLeft className="h-4 w-4" />
+                <span>Collapse</span>
+              </>
+            )}
+          </Button>
+
+          <div className={cn(
+            "flex items-center gap-3 px-3 py-2",
+            sidebarCollapsed && "md:justify-center md:px-0"
+          )}>
+            <Avatar className="h-9 w-9 border border-gray-200 dark:border-gray-700 shrink-0">
               <AvatarFallback className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                 {user.name?.charAt(0) || "U"}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
-                {user.name}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">
-                {user.email}
-              </p>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+                  {user.name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.email}
+                </p>
+              </div>
+            )}
           </div>
           <Button
             variant="outline"
             onClick={logout}
-            className="w-full justify-start gap-2"
+            className={cn(
+              "w-full gap-2",
+              sidebarCollapsed ? "md:justify-center md:px-2" : "justify-start"
+            )}
+            title={sidebarCollapsed ? "Logout" : undefined}
           >
-            <LogOut className="h-4 w-4" />
-            Logout
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!sidebarCollapsed && <span>Logout</span>}
           </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className={cn(
+        "flex-1 flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-all duration-300",
+        sidebarCollapsed ? "md:ml-20" : "md:ml-64"
+      )}>
         <header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
           <Button
             variant="ghost"
