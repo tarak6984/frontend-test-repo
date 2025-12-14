@@ -492,7 +492,7 @@ export default function DocumentsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        sessionStorage.setItem("chatSelectedDocs", JSON.stringify([doc]));
+                        sessionStorage.setItem("chatSelectedDocuments", JSON.stringify([doc]));
                         router.push("/chat");
                         toast.success("Document selected for chat");
                       }}
