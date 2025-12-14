@@ -302,23 +302,26 @@ export default function DocumentDetailsPage() {
                         {log.user?.name || "System"} performed{" "}
                         <strong>{log.action}</strong>
                       </p>
-                      {log.details && (
-                        <div className="mt-1 text-xs text-muted-foreground space-y-1">
-                          {log.details.oldStatus && log.details.newStatus && (
-                            <p>Changed status from {log.details.oldStatus} to {log.details.newStatus}</p>
-                          )}
-                          {log.details.comment && (
-                            <p className="italic bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800 text-red-900 dark:text-red-200">
-                              <strong className="text-red-700 dark:text-red-400">Rejection Reason:</strong> {String(log.details.comment)}
-                            </p>
-                          )}
-                          {!log.details.oldStatus && !log.details.newStatus && !log.details.comment && (
-                            <p>{Object.entries(log.details)
-                              .map(([key, value]) => `${key}: ${value}`)
-                              .join(", ")}</p>
-                          )}
-                        </div>
-                      )}
+                      {log.details && (() => {
+                        const details = log.details as { oldStatus?: string; newStatus?: string; comment?: string };
+                        return (
+                          <div className="mt-1 text-xs text-muted-foreground space-y-1">
+                            {details.oldStatus && details.newStatus && (
+                              <p>Changed status from {details.oldStatus} to {details.newStatus}</p>
+                            )}
+                            {details.comment && (
+                              <p className="italic bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800 text-red-900 dark:text-red-200">
+                                <strong className="text-red-700 dark:text-red-400">Rejection Reason:</strong> {String(details.comment)}
+                              </p>
+                            )}
+                            {!details.oldStatus && !details.newStatus && !details.comment && (
+                              <p>{Object.entries(log.details)
+                                .map(([key, value]) => `${key}: ${value}`)
+                                .join(", ")}</p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 )
