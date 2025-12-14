@@ -44,9 +44,18 @@ const formSchema = z.object({
   file: z.any(),
 });
 
-export function UploadDocumentModal() {
-  const [open, setOpen] = useState(false);
+interface UploadDocumentModalProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function UploadDocumentModal({ open: controlledOpen, onOpenChange }: UploadDocumentModalProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const uploadCount = useState(() => {
     if (typeof window !== "undefined") {

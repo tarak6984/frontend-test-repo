@@ -87,6 +87,7 @@ export default function DocumentsPage() {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   const handleExportExcel = () => {
     toast.loading("Exporting to Excel...", { id: "export-excel" });
@@ -284,7 +285,7 @@ export default function DocumentsPage() {
             View and manage compliance documents.
           </p>
         </div>
-        {canUpload && <div className="w-full sm:w-auto"><UploadDocumentModal /></div>}
+        {canUpload && <div className="w-full sm:w-auto"><UploadDocumentModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} /></div>}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -435,7 +436,7 @@ export default function DocumentsPage() {
             action={canUpload ? {
               label: "Upload Document",
               icon: Upload,
-              onClick: () => {}
+              onClick: () => setUploadModalOpen(true)
             } : undefined}
           />
         )
