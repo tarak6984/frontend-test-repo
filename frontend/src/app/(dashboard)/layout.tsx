@@ -215,10 +215,10 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className={cn(
-        "flex-1 flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-all duration-300",
+        "flex-1 flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-all duration-300 w-full",
         sidebarCollapsed ? "md:ml-20" : "md:ml-64"
       )}>
-        <header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
+        <header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-30">
           <Button
             variant="ghost"
             size="icon"
@@ -227,16 +227,16 @@ export default function DashboardLayout({
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-bold text-lg md:hidden dark:text-gray-100">
+          <span className="font-bold text-base sm:text-lg md:hidden dark:text-gray-100">
             AuditVault
           </span>
-          <div className="md:ml-auto flex items-center gap-2">
+          <div className="md:ml-auto flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"
               onClick={logout}
-              className="gap-2"
+              className="gap-1 sm:gap-2"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Logout</span>
@@ -244,7 +244,7 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto w-full">
           <div className="w-full max-w-7xl mx-auto">{children}</div>
         </main>
       </div>

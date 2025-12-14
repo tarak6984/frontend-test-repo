@@ -273,18 +273,18 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Documents</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Documents</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
             View and manage compliance documents.
           </p>
         </div>
-        {canUpload && <UploadDocumentModal />}
+        {canUpload && <div className="w-full sm:w-auto"><UploadDocumentModal /></div>}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
