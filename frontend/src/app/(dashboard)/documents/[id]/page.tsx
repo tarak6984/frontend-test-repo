@@ -17,6 +17,17 @@ import { format } from "date-fns";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import { Loader2, Download, Check, X } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface DocumentWithAudit extends Document {
   uploadedBy: { name: string; email: string };
@@ -34,6 +45,8 @@ export default function DocumentDetailsPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const { data: doc, isLoading } = useQuery<DocumentWithAudit>({
     queryKey: ["document", id],
@@ -62,18 +75,32 @@ export default function DocumentDetailsPage() {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async (status: DocStatus) => {
-      const response = await api.patch(`/documents/${id}/status`, { status });
+    mutationFn: async ({ status, comment }: { status: DocStatus; comment?: string }) => {
+      const response = await api.patch(`/documents/${id}/status`, { status, comment });
       return response;
     },
-    onSuccess: () => {
-      toast.success("Document status updated successfully");
+    onSuccess: (data, variables) => {
+      if (variables.status === DocStatus.REJECTED) {
+        toast.success("Document rejected with feedback provided");
+      } else {
+        toast.success("Document status updated successfully");
+      }
       queryClient.invalidateQueries({ queryKey: ["document", id] });
+      setRejectDialogOpen(false);
+      setRejectionReason("");
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to update status");
     },
   });
+
+  const handleReject = () => {
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+    updateStatus.mutate({ status: DocStatus.REJECTED, comment: rejectionReason });
+  };
 
   const handleDownload = async () => {
     try {
@@ -164,7 +191,7 @@ export default function DocumentDetailsPage() {
           {canApprove && (
             <>
               <Button
-                onClick={() => updateStatus.mutate(DocStatus.APPROVED)}
+                onClick={() => updateStatus.mutate({ status: DocStatus.APPROVED })}
                 disabled={updateStatus.isPending}
                 size="sm"
                 className="flex-1 sm:flex-initial bg-green-600 hover:bg-green-700"
@@ -173,7 +200,7 @@ export default function DocumentDetailsPage() {
                 Approve
               </Button>
               <Button
-                onClick={() => updateStatus.mutate(DocStatus.REJECTED)}
+                onClick={() => setRejectDialogOpen(true)}
                 disabled={updateStatus.isPending}
                 variant="destructive"
                 size="sm"
@@ -276,13 +303,21 @@ export default function DocumentDetailsPage() {
                         <strong>{log.action}</strong>
                       </p>
                       {log.details && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {log.details.oldStatus && log.details.newStatus
-                            ? `Changed status from ${log.details.oldStatus} to ${log.details.newStatus}`
-                            : Object.entries(log.details)
+                        <div className="mt-1 text-xs text-muted-foreground space-y-1">
+                          {log.details.oldStatus && log.details.newStatus && (
+                            <p>Changed status from {log.details.oldStatus} to {log.details.newStatus}</p>
+                          )}
+                          {log.details.comment && (
+                            <p className="italic bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800 text-red-900 dark:text-red-200">
+                              <strong className="text-red-700 dark:text-red-400">Rejection Reason:</strong> {String(log.details.comment)}
+                            </p>
+                          )}
+                          {!log.details.oldStatus && !log.details.newStatus && !log.details.comment && (
+                            <p>{Object.entries(log.details)
                               .map(([key, value]) => `${key}: ${value}`)
-                              .join(", ")}
-                        </p>
+                              .join(", ")}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -292,6 +327,62 @@ export default function DocumentDetailsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Rejection Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="bg-white dark:bg-gray-900">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 dark:text-white">
+              Reject Document
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Please provide a reason for rejecting this document. This will help the uploader understand what needs to be fixed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejection-reason" className="text-gray-900 dark:text-white">
+                Rejection Reason *
+              </Label>
+              <Textarea
+                id="rejection-reason"
+                placeholder="e.g., Missing signatures, incorrect period dates, incomplete data..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="min-h-[120px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRejectDialogOpen(false);
+                setRejectionReason("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={updateStatus.isPending || !rejectionReason.trim()}
+            >
+              {updateStatus.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <X className="mr-2 h-4 w-4" />
+                  Reject Document
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
