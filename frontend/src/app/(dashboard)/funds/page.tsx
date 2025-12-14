@@ -156,18 +156,18 @@ export default function FundsPage() {
 
   return (
     <div className={containerClass}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1
-            className={`text-3xl font-bold tracking-tight ${resolvedTheme === "dark" ? "text-white" : "text-gray-900"
+            className={`text-2xl sm:text-3xl font-bold tracking-tight ${resolvedTheme === "dark" ? "text-white" : "text-gray-900"
               }`}
           >
             Funds
           </h1>
           <p
-            className={
+            className={`text-sm sm:text-base ${
               resolvedTheme === "dark" ? "text-white" : "text-gray-600"
-            }
+            }`}
           >
             Manage investment funds on the platform.
           </p>
@@ -350,7 +350,7 @@ export default function FundsPage() {
       </div>
 
       {viewMode === "cards" ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredFunds && filteredFunds.length === 0 ? (
             <div className="col-span-full">
               {searchQuery || regionFilter !== "all" ? (
@@ -482,12 +482,8 @@ export default function FundsPage() {
           )}
         </div>
       ) : (
-        <div
-          className="rounded-md border border-gray-200 bg-white"
-          style={{
-
-          }}
-        >
+        <div className="rounded-md border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">
@@ -594,6 +590,7 @@ export default function FundsPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
     </div>
