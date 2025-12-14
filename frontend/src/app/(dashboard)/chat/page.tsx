@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Send, Bot, User, Loader2, FileText, X } from "lucide-react";
+import { Send, Bot, User, Loader2, FileText, X, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,6 +46,7 @@ export default function ChatPage() {
   const [selectedModel, setSelectedModel] = useState("openai/gpt-3.5-turbo");
   const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -196,34 +197,48 @@ export default function ChatPage() {
   }, [messages]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Sidebar */}
       <ChatSidebar
         activeSessionId={activeSessionId}
         onSessionSelect={handleSessionSelect}
         onNewChat={handleNewChat}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        <div className="border-b border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">AI Assistant</h1>
-              <p className="text-sm text-muted-foreground">
-                Select documents above and ask me anything about compliance, audits, or your documents.
-              </p>
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="border-b border-gray-200 dark:border-gray-800 p-3 sm:p-4 bg-white dark:bg-gray-900">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="min-w-0 flex-1 flex items-center gap-2">
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden shrink-0"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl font-bold truncate">AI Assistant</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-1">
+                  Select documents and ask me anything about compliance, audits, or your documents.
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
               {/* Document Selector */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                     <FileText className="h-4 w-4 mr-2" />
-                    Documents ({selectedDocuments.length})
+                    <span className="hidden sm:inline">Documents</span>
+                    <span className="sm:hidden">Docs</span> ({selectedDocuments.length})
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-96" align="end">
+                <PopoverContent className="w-[90vw] sm:w-96" align="end">
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-medium mb-2">Select Documents</h4>
@@ -261,7 +276,7 @@ export default function ChatPage() {
 
               {/* Model Selector */}
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px] flex-1 sm:flex-none">
                   <SelectValue placeholder="Select model" />
                 </SelectTrigger>
                 <SelectContent>
@@ -282,10 +297,10 @@ export default function ChatPage() {
                 <Badge
                   key={doc.id}
                   variant="secondary"
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 text-xs"
                 >
                   <FileText className="h-3 w-3" />
-                  {doc.title}
+                  <span className="max-w-[150px] sm:max-w-none truncate">{doc.title}</span>
                   <button
                     onClick={() => removeDocument(doc.id)}
                     className="ml-1 hover:text-destructive"
@@ -299,14 +314,14 @@ export default function ChatPage() {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-950">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 bg-gray-50 dark:bg-gray-950">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <Bot className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-base font-medium mb-1">
+              <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mb-4" />
+              <h3 className="text-sm sm:text-base font-medium mb-1">
                 Welcome to Audit Vault AI Assistant
               </h3>
-              <p className="text-muted-foreground max-w-md mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-md mb-4">
                 Select documents above and ask me anything about compliance, audits, or your documents.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-2xl">
@@ -375,28 +390,28 @@ export default function ChatPage() {
               {messages.map((message, index) => (
                 <div
                   key={index}
-                  className={`flex gap-3 ${message.role === "assistant" ? "justify-start" : "justify-end"
+                  className={`flex gap-2 sm:gap-3 ${message.role === "assistant" ? "justify-start" : "justify-end"
                     }`}
                 >
                   {message.role === "assistant" && (
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                        <Bot className="h-5 w-5 text-white" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                        <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
                     </div>
                   )}
                   <div
-                    className={`max-w-[70%] rounded-lg p-4 ${message.role === "assistant"
+                    className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 sm:p-4 ${message.role === "assistant"
                         ? "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
                         : "bg-blue-600 text-white"
                       }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   </div>
                   {message.role === "user" && (
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                        <User className="h-5 w-5 text-white" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
                     </div>
                   )}
@@ -420,7 +435,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
+        <div className="border-t border-gray-200 dark:border-gray-800 p-3 sm:p-4 bg-white dark:bg-gray-900">
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               ref={inputRef}
@@ -428,11 +443,13 @@ export default function ChatPage() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
               disabled={chatMutation.isPending}
-              className="flex-1"
+              className="flex-1 text-sm sm:text-base"
             />
             <Button
               type="submit"
               disabled={!input.trim() || chatMutation.isPending}
+              size="icon"
+              className="shrink-0"
             >
               {chatMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -441,7 +458,7 @@ export default function ChatPage() {
               )}
             </Button>
           </form>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2 truncate">
             Using {selectedModel.split("/")[1] || selectedModel}
             {selectedDocuments.length > 0 &&
               ` with ${selectedDocuments.length} document${selectedDocuments.length > 1 ? "s" : ""

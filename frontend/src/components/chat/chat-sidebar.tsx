@@ -22,12 +22,16 @@ interface ChatSidebarProps {
     activeSessionId: string | null;
     onSessionSelect: (sessionId: string) => void;
     onNewChat: () => void;
+    isOpen?: boolean;
+    onClose?: () => void;
 }
 
 export function ChatSidebar({
     activeSessionId,
     onSessionSelect,
     onNewChat,
+    isOpen = false,
+    onClose,
 }: ChatSidebarProps) {
     const queryClient = useQueryClient();
 
@@ -64,9 +68,29 @@ export function ChatSidebar({
         }
     };
 
+    const handleSessionClick = (sessionId: string) => {
+        onSessionSelect(sessionId);
+        if (onClose) onClose();
+    };
+
     return (
-        <div className="w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col h-full">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
+            
+            {/* Sidebar */}
+            <div className={cn(
+                "w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col h-full",
+                "fixed md:relative z-50 transition-transform duration-300",
+                "md:translate-x-0",
+                isOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800">
                 <Button
                     onClick={onNewChat}
                     className="w-full"
@@ -91,7 +115,7 @@ export function ChatSidebar({
                         sessions?.map((session) => (
                             <div
                                 key={session.id}
-                                onClick={() => onSessionSelect(session.id)}
+                                onClick={() => handleSessionClick(session.id)}
                                 className={cn(
                                     "group flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors",
                                     activeSessionId === session.id
@@ -123,6 +147,7 @@ export function ChatSidebar({
                     )}
                 </div>
             </div>
-        </div>
+            </div>
+        </>
     );
 }
