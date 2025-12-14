@@ -245,34 +245,130 @@ Removed all fake validation functions and error generation logic.
 
 ---
 
-## Bug #8: Documents & Users Pages Break on Different Screen Sizes (3 Points)
+## Bug #8: Documents & Users Pages Break on Different Screen Sizes (3 Points) ✅ FIXED
 
 ### Issue
-Responsive layouts broke at incorrect screen sizes (300px, 2250px, 6300px).
+Responsive layouts broke at incorrect screen sizes (300px, 2250px, 6300px). Pages were not properly adapting to mobile, tablet, and desktop screen sizes.
 
 ### Root Cause
-`responsive-helpers.ts` had incorrect breakpoint calculations.
+1. `responsive-helpers.ts` had incorrect breakpoint calculations
+2. Multiple pages lacked proper responsive CSS classes
+3. Tables and forms had fixed widths causing overflow on mobile
+4. No proper stacking behavior for mobile layouts
 
 ### Fix Applied
-Changed to standard breakpoints: 640px (mobile), 768px (tablet), 1024px (desktop).
+**1. Updated Breakpoints:**
+- Changed to standard Tailwind breakpoints: 640px (mobile), 768px (tablet), 1024px (desktop)
+
+**2. Improved All Pages with Responsive Design:**
+
+**Login & Register Pages:**
+- Added horizontal padding (`px-4`) to prevent edge overflow
+- Changed from fixed width (`w-[400px]`) to responsive (`w-full max-w-[400px]`)
+
+**Documents Page:**
+- Responsive headers (`text-2xl sm:text-3xl`)
+- Filters stack vertically on mobile (`flex-col sm:flex-row`)
+- Search and filter dropdowns full width on mobile (`w-full sm:w-[180px]`)
+- **Table with horizontal scroll** - `min-w-[800px]` forces proper scrolling on mobile
+- **Column minimum widths** - Each column has min-width to prevent cramping
+- **No text wrapping** - `whitespace-nowrap` keeps content on single lines
+- Column toggle button prevents collapse with `shrink-0`
+
+**Users Page:**
+- Responsive header sizing and layout
+- Search and role filter stack on mobile
+- Role filter full width on mobile (`w-full sm:w-[200px]`)
+- **Table with horizontal scroll** - `min-w-[700px]` forces proper scrolling on mobile
+- **Column minimum widths** - Each column has min-width for consistent display
+- **No text wrapping** - `whitespace-nowrap` maintains data integrity
+- Alert banner with responsive padding and dark mode support
+
+**Chat Page:**
+- Container with `overflow-hidden` to prevent layout breaks
+- **Mobile-first sidebar** - Hidden by default on mobile, shown as drawer with hamburger menu
+- **Hamburger menu button** - Visible only on mobile (< 768px) to toggle sidebar
+- **Slide-in animation** - Sidebar slides from left with overlay backdrop
+- Header stacks on mobile with text truncation
+- Model and document selectors full width on mobile
+- Document pills truncate on mobile (`max-w-[150px] sm:max-w-none`)
+- Smaller avatars on mobile (`w-6 h-6 sm:w-8 sm:h-8`)
+- Message bubbles wider on mobile (85% vs 70%) with `break-words`
+- Responsive padding throughout (`p-3 sm:p-4`)
+- Full-width chat interface on mobile when sidebar is closed
+
+**Funds Page:**
+- Responsive header layout
+- Search and view toggle proper stacking
+- Grid layout scales smoothly (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`)
+- Table wrapped in `overflow-x-auto`
+- Filters full width on mobile
+
+**Settings Page:**
+- Form buttons stack on mobile (`flex-col sm:flex-row`)
+- Profile grid responsive (`grid-cols-1 sm:grid-cols-2`)
+- Theme selector buttons adapt to screen size
+
+### Files Modified
+1. **`frontend/src/lib/responsive-helpers.ts`** - Fixed breakpoint values
+2. **`frontend/src/app/login/page.tsx`** - Added responsive container
+3. **`frontend/src/app/register/page.tsx`** - Added responsive container
+4. **`frontend/src/app/(dashboard)/documents/page.tsx`** - Full responsive redesign
+5. **`frontend/src/app/(dashboard)/users/page.tsx`** - Full responsive redesign
+6. **`frontend/src/app/(dashboard)/chat/page.tsx`** - Full responsive redesign with mobile sidebar
+7. **`frontend/src/components/chat/chat-sidebar.tsx`** - Added mobile drawer functionality
+8. **`frontend/src/app/(dashboard)/funds/page.tsx`** - Full responsive redesign
+9. **`frontend/src/app/(dashboard)/settings/page.tsx`** - Enhanced responsive design
 
 ### Testing Steps
 
 1. Login and navigate to Dashboard
 2. Open browser DevTools (F12)
-3. Enable responsive design mode
-4. Test at these widths:
-   - 375px (mobile)
-   - 640px (mobile breakpoint)
-   - 768px (tablet breakpoint)
-   - 1024px (desktop breakpoint)
-   - 1440px (large desktop)
+3. Enable responsive design mode (Ctrl+Shift+M / Cmd+Shift+M)
+4. Test at these viewport widths:
+   - **320px** - Minimum mobile (iPhone SE)
+   - **375px** - Standard mobile (iPhone 12/13)
+   - **640px** - Mobile/tablet breakpoint
+   - **768px** - Tablet portrait
+   - **1024px** - Tablet landscape/desktop breakpoint
+   - **1440px** - Standard desktop
+5. Navigate through all pages:
+   - Dashboard
+   - Documents
+   - Users (if Admin/Compliance Officer)
+   - Funds
+   - Chat
+   - Settings
+6. Test interactions at each breakpoint:
+   - Search and filter controls
+   - Table scrolling on mobile
+   - Form submissions
+   - Button interactions
+   - Dropdown menus
+   - Navigation menu
 
-### Expected Result
+### Expected Results
+
+✅ No horizontal scrolling at any breakpoint
 ✅ Layout adapts correctly at 640px (mobile → tablet)
 ✅ Layout adapts correctly at 768px (tablet → desktop)
-✅ No broken layouts or overlapping elements
-✅ All content remains readable and accessible
+✅ Layout adapts correctly at 1024px (tablet → desktop)
+✅ Content remains readable at all sizes
+✅ Buttons are touch-friendly on mobile (min 44x44px)
+✅ Forms stack vertically on mobile
+✅ Tables scroll horizontally on small screens without page overflow
+✅ Text truncates properly with ellipsis where needed
+✅ Spacing and padding scale appropriately
+✅ No element overflow or content cut-off
+✅ Dark mode works correctly at all breakpoints
+✅ All interactive elements remain accessible
+✅ Navigation sidebar works on mobile (hamburger menu)
+✅ Chat sidebar hidden on mobile, accessible via hamburger menu
+✅ Chat sidebar slides in smoothly with overlay on mobile
+✅ Full-width chat interface on mobile devices
+✅ Tables scroll horizontally on mobile without cutting off content
+✅ Table cells don't wrap text, maintaining data readability
+✅ All columns accessible via horizontal swipe on mobile
 
 ---
 
@@ -316,7 +412,7 @@ Changed to standard breakpoints: 640px (mobile), 768px (tablet), 1024px (desktop
 - [ ] Bug #5: Documents appear immediately after upload
 - [ ] Bug #6: Specific error messages displayed
 - [ ] Bug #7: No fake database errors in registration
-- [ ] Bug #8: Responsive layouts work at correct breakpoints
+- [x] Bug #8: Responsive layouts work at correct breakpoints ✅
 
 ---
 
