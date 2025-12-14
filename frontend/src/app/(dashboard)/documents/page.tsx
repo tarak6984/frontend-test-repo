@@ -128,17 +128,17 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-row items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
-          <p className="text-base text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Documents</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             View and manage compliance documents.
           </p>
         </div>
         {canUpload && <UploadDocumentModal />}
       </div>
 
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -148,91 +148,93 @@ export default function DocumentsPage() {
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {Object.values(DocStatus).map((s) => (
-              <SelectItem key={s} value={s}>
-                {s.replace("_", " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {Object.values(DocStatus).map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s.replace("_", " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {Object.values(DocType).map((t) => (
-              <SelectItem key={t} value={t}>
-                {t.replace("_", " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {Object.values(DocType).map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t.replace("_", " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="flex">
-              <Columns3 className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuCheckboxItem
-              checked={visibleColumns.title}
-              onCheckedChange={(v) =>
-                setVisibleColumns({ ...visibleColumns, title: v })
-              }
-            >
-              Title
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={visibleColumns.fund}
-              onCheckedChange={(v) =>
-                setVisibleColumns({ ...visibleColumns, fund: v })
-              }
-            >
-              Fund
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={visibleColumns.type}
-              onCheckedChange={(v) =>
-                setVisibleColumns({ ...visibleColumns, type: v })
-              }
-            >
-              Type
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={visibleColumns.period}
-              onCheckedChange={(v) =>
-                setVisibleColumns({ ...visibleColumns, period: v })
-              }
-            >
-              Period
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={visibleColumns.status}
-              onCheckedChange={(v) =>
-                setVisibleColumns({ ...visibleColumns, status: v })
-              }
-            >
-              Status
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={visibleColumns.uploaded}
-              onCheckedChange={(v) =>
-                setVisibleColumns({ ...visibleColumns, uploaded: v })
-              }
-            >
-              Uploaded
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="flex shrink-0">
+                <Columns3 className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.title}
+                onCheckedChange={(v) =>
+                  setVisibleColumns({ ...visibleColumns, title: v })
+                }
+              >
+                Title
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.fund}
+                onCheckedChange={(v) =>
+                  setVisibleColumns({ ...visibleColumns, fund: v })
+                }
+              >
+                Fund
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.type}
+                onCheckedChange={(v) =>
+                  setVisibleColumns({ ...visibleColumns, type: v })
+                }
+              >
+                Type
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.period}
+                onCheckedChange={(v) =>
+                  setVisibleColumns({ ...visibleColumns, period: v })
+                }
+              >
+                Period
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.status}
+                onCheckedChange={(v) =>
+                  setVisibleColumns({ ...visibleColumns, status: v })
+                }
+              >
+                Status
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={visibleColumns.uploaded}
+                onCheckedChange={(v) =>
+                  setVisibleColumns({ ...visibleColumns, uploaded: v })
+                }
+              >
+                Uploaded
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {isLoading ? (
@@ -265,51 +267,52 @@ export default function DocumentsPage() {
           />
         )
       ) : (
-        <div className="block rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-x-auto">
-          <Table>
+        <div className="block rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+          <div className="overflow-x-auto">
+          <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
-                {visibleColumns.title && <TableHead>Title</TableHead>}
-                {visibleColumns.fund && <TableHead>Fund</TableHead>}
-                {visibleColumns.type && <TableHead>Type</TableHead>}
-                {visibleColumns.period && <TableHead>Period</TableHead>}
-                {visibleColumns.status && <TableHead>Status</TableHead>}
-                {visibleColumns.uploaded && <TableHead>Uploaded</TableHead>}
-                <TableHead className="text-right">Actions</TableHead>
+                {visibleColumns.title && <TableHead className="min-w-[200px]">Title</TableHead>}
+                {visibleColumns.fund && <TableHead className="min-w-[150px]">Fund</TableHead>}
+                {visibleColumns.type && <TableHead className="min-w-[120px]">Type</TableHead>}
+                {visibleColumns.period && <TableHead className="min-w-[100px]">Period</TableHead>}
+                {visibleColumns.status && <TableHead className="min-w-[100px]">Status</TableHead>}
+                {visibleColumns.uploaded && <TableHead className="min-w-[120px]">Uploaded</TableHead>}
+                <TableHead className="text-right min-w-[120px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredDocuments?.map((doc) => (
                 <TableRow key={doc.id}>
                   {visibleColumns.title && (
-                    <TableCell className="font-medium">{doc.title}</TableCell>
+                    <TableCell className="font-medium whitespace-nowrap">{doc.title}</TableCell>
                   )}
                   {visibleColumns.fund && (
-                    <TableCell>{doc.fund?.name || doc.fundId}</TableCell>
+                    <TableCell className="whitespace-nowrap">{doc.fund?.name || doc.fundId}</TableCell>
                   )}
                   {visibleColumns.type && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge variant="outline">
                         {doc.type.replace("_", " ")}
                       </Badge>
                     </TableCell>
                   )}
                   {visibleColumns.period && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       {format(new Date(doc.periodEnd), "MMM yyyy")}
                     </TableCell>
                   )}
                   {visibleColumns.status && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <StatusBadge status={doc.status} animated />
                     </TableCell>
                   )}
                   {visibleColumns.uploaded && (
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       {format(new Date(doc.createdAt), "dd MMM yyyy")}
                     </TableCell>
                   )}
-                  <TableCell className="text-right space-x-2">
+                  <TableCell className="text-right space-x-2 whitespace-nowrap">
                     <Button asChild variant="ghost" size="sm">
                       <Link href={`/documents/${doc.id}`}>
                         <Eye className="h-4 w-4" />
@@ -349,6 +352,7 @@ export default function DocumentsPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
     </div>

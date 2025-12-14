@@ -102,16 +102,17 @@ export default function UsersPage() {
     data: any[];
     showActions?: boolean;
   }) => (
-    <div className="rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-x-auto">
-      <Table>
+    <div className="rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+      <div className="overflow-x-auto">
+      <Table className="min-w-[700px]">
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Joined</TableHead>
+            <TableHead className="min-w-[150px]">Name</TableHead>
+            <TableHead className="min-w-[200px]">Email</TableHead>
+            <TableHead className="min-w-[120px]">Role</TableHead>
+            <TableHead className="min-w-[150px]">Joined</TableHead>
             {showActions && (
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right min-w-[120px]">Actions</TableHead>
             )}
           </TableRow>
         </TableHeader>
@@ -128,14 +129,14 @@ export default function UsersPage() {
           ) : (
             data.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium whitespace-nowrap">{user.name}</TableCell>
+                <TableCell className="whitespace-nowrap">{user.email}</TableCell>
+                <TableCell className="whitespace-nowrap">
                   <Badge variant="outline">{user.role}</Badge>
                 </TableCell>
-                <TableCell>{format(new Date(user.createdAt), "PPP")}</TableCell>
+                <TableCell className="whitespace-nowrap">{format(new Date(user.createdAt), "PPP")}</TableCell>
                 {showActions && (
-                  <TableCell className="text-right space-x-2">
+                  <TableCell className="text-right space-x-2 whitespace-nowrap">
                     <Button
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
@@ -161,6 +162,7 @@ export default function UsersPage() {
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 
@@ -175,14 +177,14 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-base text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage system access and approvals.
           </p>
         </div>
       </div>
 
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -193,7 +195,7 @@ export default function UsersPage() {
           />
         </div>
         <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by Role" />
           </SelectTrigger>
           <SelectContent>
@@ -220,10 +222,10 @@ export default function UsersPage() {
           <UserTable data={activeUsers} />
         </TabsContent>
         <TabsContent value="pending" className="mt-4 space-y-4">
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-3 sm:p-4 mb-4">
             <div className="flex">
               <div className="ml-3">
-                <p className="text-sm text-yellow-700">
+                <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-200">
                   These users have requested access. Verify their identity
                   before approving.
                 </p>
