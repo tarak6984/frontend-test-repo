@@ -154,10 +154,10 @@ export default function DocumentsPage() {
   };
 
   const {
-    data: documents,
+    data: documentsResponse,
     isLoading,
     error,
-  } = useQuery<Document[]>({
+  } = useQuery<{ data: Document[]; meta: any }>({
     queryKey: ["documents", statusFilter, typeFilter],
     queryFn: async () => {
       try {
@@ -178,6 +178,9 @@ export default function DocumentsPage() {
     queryKey: ["funds"],
     queryFn: () => api.get("/funds").then((res) => res.data),
   });
+
+  // Extract documents from paginated response
+  const documents = documentsResponse?.data || [];
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

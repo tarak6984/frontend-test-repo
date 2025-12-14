@@ -96,11 +96,33 @@ export class DocumentsService {
             where.fundId = { in: accessibleFundIds };
         }
 
-        return this.prisma.document.findMany({
+        // Pagination support
+        const page = parseInt(query.page) || 1;
+        const limit = parseInt(query.limit) || 50;
+        const skip = (page - 1) * limit;
+
+        // Get total count for pagination metadata
+        const total = await this.prisma.document.count({ where });
+
+        // Fetch documents with pagination
+        const documents = await this.prisma.document.findMany({
             where,
             include: { fund: { select: { name: true, code: true } } },
             orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
         });
+
+        // Return paginated response
+        return {
+            data: documents,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
 
     async findOne(id: string) {

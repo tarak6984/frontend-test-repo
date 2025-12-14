@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { DocStatus } from "@/types";
+import { memo } from "react";
 import { 
   CheckCircle2, 
   Clock, 
@@ -58,7 +59,7 @@ interface StatusBadgeProps {
   animated?: boolean;
 }
 
-export function StatusBadge({ 
+export const StatusBadge = memo(function StatusBadge({ 
   status, 
   showIcon = true, 
   size = "md",
@@ -96,4 +97,4 @@ export function StatusBadge({
       {config.label}
     </Badge>
   );
-}
+});
