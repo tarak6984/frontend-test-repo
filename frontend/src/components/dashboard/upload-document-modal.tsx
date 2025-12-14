@@ -32,7 +32,8 @@ import {
 import { api } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, X, FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -49,8 +50,17 @@ interface UploadDocumentModalProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+interface FileUploadStatus {
+  file: File;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  error?: string;
+  progress?: number;
+}
+
 export function UploadDocumentModal({ open: controlledOpen, onOpenChange }: UploadDocumentModalProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [uploadStatuses, setUploadStatuses] = useState<FileUploadStatus[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
 
   // Use controlled state if provided, otherwise use internal state
@@ -85,15 +95,11 @@ export function UploadDocumentModal({ open: controlledOpen, onOpenChange }: Uplo
     },
   });
 
-  const uploadMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof formSchema>) => {
-      const file = values.file[0];
-
-      if (!file) {
-        throw new Error("File is required");
-      }
-
-      // File validation passed, proceed with upload
+  const uploadSingleFile = async (file: File, values: z.infer<typeof formSchema>, index: number) => {
+    try {
+      setUploadStatuses(prev => prev.map((item, i) => 
+        i === index ? { ...item, status: 'uploading' as const, progress: 0 } : item
+      ));
 
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > 50) {
@@ -102,7 +108,7 @@ export function UploadDocumentModal({ open: controlledOpen, onOpenChange }: Uplo
 
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("title", values.title);
+      formData.append("title", `${values.title}${uploadStatuses.length > 1 ? ` - ${file.name}` : ''}`);
       formData.append("fundId", values.fundId);
       formData.append("type", values.type);
       formData.append("periodStart", values.periodStart);
@@ -111,7 +117,6 @@ export function UploadDocumentModal({ open: controlledOpen, onOpenChange }: Uplo
         formData.append("description", values.description);
 
       const timeoutPromise = new Promise((_, reject) => {
-        // Increase timeout to allow for the bug delay
         setTimeout(() => reject(new Error("Upload timeout")), 20000000);
       });
 
@@ -119,44 +124,70 @@ export function UploadDocumentModal({ open: controlledOpen, onOpenChange }: Uplo
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const { data } = (await Promise.race([
-        uploadPromise,
-        timeoutPromise,
-      ])) as any;
-      return data;
-    },
-    onSuccess: () => {
-      toast.success("Document uploaded successfully");
+      await Promise.race([uploadPromise, timeoutPromise]);
 
-      // Invalidate all document-related queries to refresh the list
+      setUploadStatuses(prev => prev.map((item, i) => 
+        i === index ? { ...item, status: 'success' as const, progress: 100 } : item
+      ));
+
+      return { success: true };
+    } catch (error: any) {
+      const errorMsg = error.message === "Upload timeout" 
+        ? "Upload timeout" 
+        : error.response?.data?.message || "Upload failed";
+      
+      setUploadStatuses(prev => prev.map((item, i) => 
+        i === index ? { ...item, status: 'error' as const, error: errorMsg } : item
+      ));
+
+      return { success: false, error: errorMsg };
+    }
+  };
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const files = Array.from(values.file as FileList);
+    
+    if (files.length === 0) {
+      toast.error("Please select at least one file");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadStatuses(files.map(file => ({ file, status: 'pending' as const })));
+
+    const results = [];
+    for (let i = 0; i < files.length; i++) {
+      const result = await uploadSingleFile(files[i], values, i);
+      results.push(result);
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+
+    if (successCount > 0) {
+      toast.success(`${successCount} document${successCount > 1 ? 's' : ''} uploaded successfully`);
       queryClient.invalidateQueries({ queryKey: ["documents"] });
       queryClient.invalidateQueries({ queryKey: ["documents-all"] });
-
+      
       if (typeof window !== "undefined") {
-        const currentCount = parseInt(
-          localStorage.getItem("uploadCount") || "0",
-          10
-        );
-        localStorage.setItem("uploadCount", String(currentCount + 1));
+        const currentCount = parseInt(localStorage.getItem("uploadCount") || "0", 10);
+        localStorage.setItem("uploadCount", String(currentCount + successCount));
       }
+    }
 
-      setOpen(false);
-      form.reset();
-    },
-    onError: (error: any) => {
-      console.error("Upload error:", error);
+    if (failCount > 0) {
+      toast.error(`${failCount} document${failCount > 1 ? 's' : ''} failed to upload`);
+    }
 
-      if (error.message === "Upload timeout") {
-        toast.error("Upload timed out. Please try again.");
-        return;
-      }
+    setIsUploading(false);
 
-      toast.error(error.response?.data?.message || "Failed to upload document");
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    uploadMutation.mutate(values);
+    if (failCount === 0) {
+      setTimeout(() => {
+        setOpen(false);
+        form.reset();
+        setUploadStatuses([]);
+      }, 1500);
+    }
   }
 
   return (
@@ -300,29 +331,62 @@ export function UploadDocumentModal({ open: controlledOpen, onOpenChange }: Uplo
               name="file"
               render={({ field: { onChange, value, ...field } }) => (
                 <FormItem>
-                  <FormLabel>File</FormLabel>
+                  <FormLabel>Files (Select one or multiple)</FormLabel>
                   <FormControl>
                     <Input
                       type="file"
                       accept=".pdf,.doc,.docx"
+                      multiple
                       onChange={(e) => onChange(e.target.files)}
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Hold Ctrl (Windows) or Cmd (Mac) to select multiple files
+                  </p>
                 </FormItem>
               )}
             />
+            {uploadStatuses.length > 0 && (
+              <div className="space-y-2 mt-4 p-4 border rounded-md bg-gray-50 dark:bg-gray-800">
+                <h4 className="font-semibold text-sm">Upload Progress</h4>
+                {uploadStatuses.map((status, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    {status.status === 'pending' && <Loader2 className="h-4 w-4 text-gray-400" />}
+                    {status.status === 'uploading' && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
+                    {status.status === 'success' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                    {status.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
+                    <span className="flex-1 truncate">{status.file.name}</span>
+                    {status.error && <span className="text-xs text-red-500">{status.error}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  setUploadStatuses([]);
+                }}
+                disabled={isUploading}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={uploadMutation.isPending}>
-                {uploadMutation.isPending ? "Uploading..." : "Upload Document"}
+              <Button type="submit" disabled={isUploading}>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="mr-2 h-4 w-4" />
+                    Upload Document{uploadStatuses.length > 1 ? 's' : ''}
+                  </>
+                )}
               </Button>
             </div>
           </form>
