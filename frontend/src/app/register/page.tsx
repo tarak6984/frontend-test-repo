@@ -89,8 +89,8 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
-        <Card className="w-[400px] dark:bg-gray-900 dark:border-gray-800">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 px-4">
+        <Card className="w-full max-w-[400px] dark:bg-gray-900 dark:border-gray-800">
           <CardHeader>
             <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
               <CheckCircle2 className="h-6 w-6" />
@@ -121,8 +121,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Card className="w-[400px] dark:bg-gray-900 dark:border-gray-800">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 px-4">
+      <Card className="w-full max-w-[400px] dark:bg-gray-900 dark:border-gray-800">
         <CardHeader>
           <CardTitle className="dark:text-gray-100">Create Account</CardTitle>
           <CardDescription className="dark:text-gray-400">

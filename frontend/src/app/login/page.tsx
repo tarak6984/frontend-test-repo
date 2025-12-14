@@ -67,8 +67,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Card className="w-[400px] dark:bg-gray-900 dark:border-gray-800">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-950 px-4">
+      <Card className="w-full max-w-[400px] dark:bg-gray-900 dark:border-gray-800">
         <CardHeader>
           <CardTitle className="dark:text-gray-100">
             Login to Audit Vault
