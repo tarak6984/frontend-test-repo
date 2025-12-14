@@ -33,6 +33,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -77,6 +85,8 @@ export default function DocumentsPage() {
     status: true,
     uploaded: true,
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
 
   const handleExportExcel = () => {
     toast.loading("Exporting to Excel...", { id: "export-excel" });
@@ -93,14 +103,14 @@ export default function DocumentsPage() {
           { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
           { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
           { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
-          { header: 'File Name', key: 'fileName' },
+          { header: 'File Key', key: 'fileKey' },
         ],
       });
 
       if (result.success) {
         toast.success("Export successful!", {
           id: "export-excel",
-          description: `${filteredDocuments.length} documents exported to ${result.filename}`,
+          description: `${filteredDocuments?.length || 0} documents exported to ${result.filename}`,
         });
       } else {
         toast.error("Export failed", {
@@ -117,7 +127,7 @@ export default function DocumentsPage() {
     setTimeout(() => {
       const result = exportToCSV({
         filename: 'audit-vault-documents',
-        data: filteredDocuments,
+        data: filteredDocuments || [],
         columns: [
           { header: 'Title', key: 'title' },
           { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
@@ -125,14 +135,14 @@ export default function DocumentsPage() {
           { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
           { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
           { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
-          { header: 'File Name', key: 'fileName' },
+          { header: 'File Key', key: 'fileKey' },
         ],
       });
 
       if (result.success) {
         toast.success("Export successful!", {
           id: "export-csv",
-          description: `${filteredDocuments.length} documents exported to ${result.filename}`,
+          description: `${filteredDocuments?.length || 0} documents exported to ${result.filename}`,
         });
       } else {
         toast.error("Export failed", {
@@ -178,13 +188,28 @@ export default function DocumentsPage() {
         description: "The document has been permanently removed from the system.",
       });
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
     },
     onError: (err: any) => {
       toast.error("Failed to delete document", {
         description: err.response?.data?.message || "An error occurred while deleting the document.",
       });
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
     },
   });
+
+  const handleDeleteClick = (docId: string) => {
+    setDocumentToDelete(docId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (documentToDelete) {
+      deleteMutation.mutate(documentToDelete);
+    }
+  };
 
   const canUpload =
     user && ["ADMIN", "FUND_MANAGER", "COMPLIANCE_OFFICER"].includes(user.role);
@@ -203,7 +228,7 @@ export default function DocumentsPage() {
     const matchesAdvancedSearch =
       !advancedFilters.searchQuery ||
       doc.title.toLowerCase().includes(advancedFilters.searchQuery.toLowerCase()) ||
-      doc.fileName?.toLowerCase().includes(advancedFilters.searchQuery.toLowerCase()) ||
+      doc.fileKey?.toLowerCase().includes(advancedFilters.searchQuery.toLowerCase()) ||
       doc.fund?.name?.toLowerCase().includes(advancedFilters.searchQuery.toLowerCase());
 
     const matchesAdvancedStatus =
@@ -479,15 +504,7 @@ export default function DocumentsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              "Are you sure you want to delete this document?"
-                            )
-                          ) {
-                            deleteMutation.mutate(doc.id);
-                          }
-                        }}
+                        onClick={() => handleDeleteClick(doc.id)}
                       >
                         <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                       </Button>
@@ -500,6 +517,42 @@ export default function DocumentsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Document</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this document? This action cannot be undone.
+              The document and all associated audit logs will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
