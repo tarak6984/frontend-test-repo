@@ -54,6 +54,7 @@ import { exportToExcel, exportToCSV } from "@/lib/export-utils";
 import { toast } from "sonner";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import { AdvancedFiltersPanel, AdvancedFilters } from "@/components/documents/advanced-filters";
 
 export default function DocumentsPage() {
   const { user } = useAuth();
@@ -62,6 +63,12 @@ export default function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({
+    searchQuery: "",
+    status: [],
+    type: [],
+    fundIds: [],
+  });
   const [visibleColumns, setVisibleColumns] = useState({
     title: true,
     fund: true,
@@ -72,48 +79,68 @@ export default function DocumentsPage() {
   });
 
   const handleExportExcel = () => {
-    const result = exportToExcel({
-      filename: 'audit-vault-documents',
-      sheetName: 'Documents',
-      data: filteredDocuments,
-      columns: [
-        { header: 'Title', key: 'title' },
-        { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
-        { header: 'Type', key: 'type', format: (type: string) => type.replace('_', ' ') },
-        { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
-        { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
-        { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
-        { header: 'File Name', key: 'fileName' },
-      ],
-    });
+    toast.loading("Exporting to Excel...", { id: "export-excel" });
+    
+    setTimeout(() => {
+      const result = exportToExcel({
+        filename: 'audit-vault-documents',
+        sheetName: 'Documents',
+        data: filteredDocuments,
+        columns: [
+          { header: 'Title', key: 'title' },
+          { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
+          { header: 'Type', key: 'type', format: (type: string) => type.replace('_', ' ') },
+          { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
+          { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
+          { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
+          { header: 'File Name', key: 'fileName' },
+        ],
+      });
 
-    if (result.success) {
-      toast.success(`Exported ${filteredDocuments.length} documents to ${result.filename}`);
-    } else {
-      toast.error('Export failed: ' + result.error);
-    }
+      if (result.success) {
+        toast.success("Export successful!", {
+          id: "export-excel",
+          description: `${filteredDocuments.length} documents exported to ${result.filename}`,
+        });
+      } else {
+        toast.error("Export failed", {
+          id: "export-excel",
+          description: result.error,
+        });
+      }
+    }, 500);
   };
 
   const handleExportCSV = () => {
-    const result = exportToCSV({
-      filename: 'audit-vault-documents',
-      data: filteredDocuments,
-      columns: [
-        { header: 'Title', key: 'title' },
-        { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
-        { header: 'Type', key: 'type', format: (type: string) => type.replace('_', ' ') },
-        { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
-        { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
-        { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
-        { header: 'File Name', key: 'fileName' },
-      ],
-    });
+    toast.loading("Exporting to CSV...", { id: "export-csv" });
+    
+    setTimeout(() => {
+      const result = exportToCSV({
+        filename: 'audit-vault-documents',
+        data: filteredDocuments,
+        columns: [
+          { header: 'Title', key: 'title' },
+          { header: 'Fund', key: 'fund', format: (fund: any) => fund?.name || 'N/A' },
+          { header: 'Type', key: 'type', format: (type: string) => type.replace('_', ' ') },
+          { header: 'Status', key: 'status', format: (status: string) => status.replace('_', ' ') },
+          { header: 'Period', key: 'periodEnd', format: (date: string) => format(new Date(date), 'MMM yyyy') },
+          { header: 'Uploaded', key: 'createdAt', format: (date: string) => format(new Date(date), 'dd MMM yyyy') },
+          { header: 'File Name', key: 'fileName' },
+        ],
+      });
 
-    if (result.success) {
-      toast.success(`Exported ${filteredDocuments.length} documents to ${result.filename}`);
-    } else {
-      toast.error('Export failed: ' + result.error);
-    }
+      if (result.success) {
+        toast.success("Export successful!", {
+          id: "export-csv",
+          description: `${filteredDocuments.length} documents exported to ${result.filename}`,
+        });
+      } else {
+        toast.error("Export failed", {
+          id: "export-csv",
+          description: result.error,
+        });
+      }
+    }, 500);
   };
 
   const {
@@ -137,16 +164,25 @@ export default function DocumentsPage() {
     retry: 1,
   });
 
+  const { data: funds } = useQuery({
+    queryKey: ["funds"],
+    queryFn: () => api.get("/funds").then((res) => res.data),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await api.delete(`/documents/${id}`);
     },
     onSuccess: () => {
-      toast.success("Document deleted successfully");
+      toast.success("Document deleted successfully", {
+        description: "The document has been permanently removed from the system.",
+      });
       queryClient.invalidateQueries({ queryKey: ["documents"] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || "Failed to delete document");
+      toast.error("Failed to delete document", {
+        description: err.response?.data?.message || "An error occurred while deleting the document.",
+      });
     },
   });
 
@@ -154,13 +190,49 @@ export default function DocumentsPage() {
     user && ["ADMIN", "FUND_MANAGER", "COMPLIANCE_OFFICER"].includes(user.role);
   const isAdmin = user?.role === "ADMIN";
 
-  // Filter documents by search query
-  const filteredDocuments = documents?.filter(
-    (doc) =>
+  // Filter documents by search query and advanced filters
+  const filteredDocuments = documents?.filter((doc: Document) => {
+    // Basic quick search
+    const matchesBasicSearch =
+      !searchQuery ||
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.fund?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.fund?.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      doc.fund?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.fund?.code?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Advanced filters
+    const matchesAdvancedSearch =
+      !advancedFilters.searchQuery ||
+      doc.title.toLowerCase().includes(advancedFilters.searchQuery.toLowerCase()) ||
+      doc.fileName?.toLowerCase().includes(advancedFilters.searchQuery.toLowerCase()) ||
+      doc.fund?.name?.toLowerCase().includes(advancedFilters.searchQuery.toLowerCase());
+
+    const matchesAdvancedStatus =
+      advancedFilters.status.length === 0 || advancedFilters.status.includes(doc.status);
+
+    const matchesAdvancedType =
+      advancedFilters.type.length === 0 || advancedFilters.type.includes(doc.type);
+
+    const matchesAdvancedFund =
+      advancedFilters.fundIds.length === 0 || advancedFilters.fundIds.includes(doc.fundId);
+
+    const matchesDateFrom =
+      !advancedFilters.dateFrom ||
+      new Date(doc.createdAt) >= advancedFilters.dateFrom;
+
+    const matchesDateTo =
+      !advancedFilters.dateTo ||
+      new Date(doc.createdAt) <= advancedFilters.dateTo;
+
+    return (
+      matchesBasicSearch &&
+      matchesAdvancedSearch &&
+      matchesAdvancedStatus &&
+      matchesAdvancedType &&
+      matchesAdvancedFund &&
+      matchesDateFrom &&
+      matchesDateTo
+    );
+  });
 
   const getStatusColor = (status: DocStatus) => {
     switch (status) {
@@ -191,13 +263,18 @@ export default function DocumentsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search documents, funds..."
+            placeholder="Quick search documents, funds..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
           />
         </div>
         <div className="flex gap-2">
+          <AdvancedFiltersPanel
+            filters={advancedFilters}
+            onFiltersChange={setAdvancedFilters}
+            funds={funds}
+          />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filter by Status" />
