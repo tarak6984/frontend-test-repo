@@ -26,13 +26,16 @@ export default function DashboardPage() {
   const spacingClasses = getResponsiveSpacing(viewport);
   const cardLayout = getCardLayout(viewport);
 
-  const { data: documents, isLoading: docsLoading } = useQuery({
+  const { data: documentsResponse, isLoading: docsLoading } = useQuery({
     queryKey: ["documents-all"],
     queryFn: async () => {
       const { data } = await api.get("/documents");
       return data;
     },
   });
+
+  // Extract documents from paginated response
+  const documents = documentsResponse?.data || [];
 
   const { data: funds, isLoading: fundsLoading } = useQuery({
     queryKey: ["funds-all"],
