@@ -21,6 +21,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help";
 
 export default function DashboardLayout({
   children,
@@ -32,6 +34,9 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -72,6 +77,9 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50/50">
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp />
+
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
